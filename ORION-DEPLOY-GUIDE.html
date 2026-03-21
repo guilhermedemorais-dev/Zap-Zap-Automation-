@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORION CRM — Deploy & Setup Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0A0A0B; --surface: #111113; --elevated: #18181C; --hover: #1E1E24;
+            --gold: #C8A97A; --gold-dim: #A08A60; --gold-glow: rgba(200,169,122,0.12);
+            --text: #E8E6E3; --text2: #8A8A8E; --muted: #5A5A5E;
+            --green: #4ADE80; --green-bg: rgba(74,222,128,0.08); --green-border: rgba(74,222,128,0.25);
+            --red: #F87171; --red-bg: rgba(248,113,113,0.08); --red-border: rgba(248,113,113,0.25);
+            --orange: #FB923C; --orange-bg: rgba(251,146,60,0.08); --orange-border: rgba(251,146,60,0.25);
+            --blue: #60A5FA; --blue-bg: rgba(96,165,250,0.08); --blue-border: rgba(96,165,250,0.25);
+            --purple: #A78BFA; --purple-bg: rgba(167,139,250,0.08); --purple-border: rgba(167,139,250,0.25);
+            --border: #2A2A30; --border-s: #1E1E24;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+
+        .header { border-bottom:1px solid var(--border); padding:40px 24px 28px; text-align:center; }
+        .header-label { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+        .header h1 { font-size:26px; font-weight:300; } .header h1 strong { font-weight:700; color:var(--gold); }
+        .header-sub { font-size:13px; color:var(--text2); margin-top:6px; }
+
+        /* Progress bar */
+        .progress-wrap { max-width:900px; margin:24px auto; padding:0 24px; }
+        .progress-bar-bg { background:var(--surface); border:1px solid var(--border); border-radius:10px; height:40px; overflow:hidden; position:relative; }
+        .progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); border-radius:10px; transition:width 0.4s ease; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; min-width:40px; }
+        .progress-text { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:#0A0A0B; }
+        .progress-label { text-align:center; margin-top:8px; font-size:13px; color:var(--text2); }
+        .progress-label strong { color:var(--gold); }
+
+        /* Nav pills */
+        .nav { max-width:900px; margin:20px auto; padding:0 24px; display:flex; gap:8px; flex-wrap:wrap; }
+        .nav-pill { font-size:12px; padding:6px 14px; border-radius:20px; border:1px solid var(--border); color:var(--text2); cursor:pointer; transition:all 0.2s; background:var(--surface); user-select:none; }
+        .nav-pill:hover { border-color:var(--gold-dim); color:var(--text); }
+        .nav-pill.active { border-color:var(--gold); color:var(--gold); background:var(--gold-glow); }
+        .nav-pill .pill-count { font-family:'JetBrains Mono',monospace; font-size:10px; margin-left:4px; opacity:0.7; }
+
+        /* Main */
+        .main { max-width:900px; margin:0 auto; padding:16px 24px 60px; }
+
+        /* Phase */
+        .phase { margin-bottom:24px; display:none; }
+        .phase.visible { display:block; }
+        .phase-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+        .phase-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+        .phase-title { font-size:18px; font-weight:600; }
+        .phase-desc { font-size:12px; color:var(--text2); }
+
+        /* Step */
+        .step { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; transition:border-color 0.2s; }
+        .step.done { border-color:var(--green-border); }
+        .step-header { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; cursor:pointer; user-select:none; }
+        .step-check { width:22px; height:22px; border-radius:6px; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; transition:all 0.2s; cursor:pointer; }
+        .step.done .step-check { background:var(--green); border-color:var(--green); }
+        .step.done .step-check::after { content:'✓'; color:#0A0A0B; font-size:13px; font-weight:700; }
+        .step-info { flex:1; }
+        .step-title { font-size:14px; font-weight:600; }
+        .step.done .step-title { color:var(--green); text-decoration:line-through; text-decoration-color:rgba(74,222,128,0.3); }
+        .step-time { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); margin-top:2px; }
+        .step-expand { color:var(--muted); font-size:18px; cursor:pointer; padding:0 4px; transition:transform 0.2s; flex-shrink:0; }
+        .step.open .step-expand { transform:rotate(180deg); }
+
+        .step-detail { display:none; padding:0 16px 16px 50px; }
+        .step.open .step-detail { display:block; }
+        .step-detail p { font-size:13px; color:var(--text2); margin-bottom:10px; line-height:1.7; }
+        .step-detail strong { color:var(--text); font-weight:500; }
+
+        /* Code block */
+        .code-block { background:var(--bg); border:1px solid var(--border-s); border-radius:8px; padding:14px 16px; margin:10px 0; overflow-x:auto; position:relative; }
+        .code-block code { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); line-height:1.8; white-space:pre; display:block; }
+        .code-block .comment { color:var(--muted); }
+        .code-block .cmd { color:var(--gold); }
+        .copy-btn { position:absolute; top:8px; right:8px; background:var(--elevated); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:10px; color:var(--text2); cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all 0.2s; }
+        .copy-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+        /* Warning/info boxes */
+        .warn { background:var(--orange-bg); border:1px solid var(--orange-border); border-radius:8px; padding:10px 14px; margin:10px 0; font-size:12px; color:var(--orange); display:flex; gap:8px; align-items:flex-start; }
+        .info { background:var(--blue-bg); border:1px solid var(--blue-border); border-radius:8px; padding:10px 14px; margin:10px 0; font-size:12px; color:var(--blue); display:flex; gap:8px; align-items:flex-start; }
+        .success-box { background:var(--green-bg); border:1px solid var(--green-border); border-radius:8px; padding:10px 14px; margin:10px 0; font-size:12px; color:var(--green); }
+
+        .inline-code { font-family:'JetBrains Mono',monospace; font-size:11px; background:rgba(200,169,122,0.08); color:var(--gold-dim); padding:2px 6px; border-radius:4px; }
+
+        /* Footer */
+        .footer { text-align:center; padding:24px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); }
+
+        @media(max-width:640px) {
+            .nav { gap:6px; } .nav-pill { font-size:11px; padding:5px 10px; }
+            .step-detail { padding-left:16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-label">ORION CRM · Deployment Runbook</div>
+    <h1>Setup Completo — <strong>VPS → CRM → n8n → uazapi → Chatbot</strong></h1>
+    <p class="header-sub">Hostinger VPS · Docker · ORION CRM · n8n · uazapi · WhatsApp Chatbot</p>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+    <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%">
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+    </div>
+    <div class="progress-label"><strong id="doneCount">0</strong> de <strong id="totalCount">0</strong> passos concluídos</div>
+</div>
+
+<!-- Nav -->
+<div class="nav" id="nav"></div>
+
+<!-- Phases -->
+<div class="main" id="main">
+
+<!-- ==================== PHASE 1 ==================== -->
+<div class="phase visible" data-phase="1">
+    <div class="phase-header">
+        <div class="phase-icon" style="background:var(--blue-bg);color:var(--blue);">🖥️</div>
+        <div><div class="phase-title">Fase 1 — Preparar o VPS</div><div class="phase-desc">Docker, Docker Compose, firewall, DNS</div></div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Acessar VPS via SSH</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">ssh</span> root@SEU_IP_HOSTINGER</code></div>
+            <p>Use a senha ou chave SSH que a Hostinger forneceu. Se for a primeira vez, aceite o fingerprint.</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Instalar Docker + Docker Compose</div><div class="step-time">~5 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Atualizar sistema</span>
+<span class="cmd">apt update && apt upgrade -y</span>
+
+<span class="comment"># Instalar Docker</span>
+<span class="cmd">curl -fsSL https://get.docker.com | sh</span>
+
+<span class="comment"># Verificar instalação</span>
+<span class="cmd">docker --version</span>
+<span class="cmd">docker compose version</span></code></div>
+            <p>O script oficial do Docker já instala o Compose plugin (v2). Se <span class="inline-code">docker compose version</span> funcionar, está tudo certo.</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Configurar firewall (UFW)</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">ufw allow 22/tcp</span>    <span class="comment"># SSH</span>
+<span class="cmd">ufw allow 80/tcp</span>    <span class="comment"># HTTP</span>
+<span class="cmd">ufw allow 443/tcp</span>   <span class="comment"># HTTPS</span>
+<span class="cmd">ufw enable</span>
+<span class="cmd">ufw status</span></code></div>
+            <div class="warn">⚠️ NÃO abra portas 4000 (API), 5432 (Postgres), 6379 (Redis), 5678 (n8n). Esses serviços ficam APENAS na rede interna Docker.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Apontar DNS para o VPS</div><div class="step-time">~5 min (propagação pode levar até 24h)</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>No painel do seu registrador de domínio, criar registros A:</p>
+            <div class="code-block"><code>app.orinjoias.com.br  →  A  →  SEU_IP_VPS
+api.orinjoias.com.br  →  A  →  SEU_IP_VPS</code></div>
+            <p>Ou, se usar subdomínio único:</p>
+            <div class="code-block"><code>orion.orinjoias.com.br  →  A  →  SEU_IP_VPS</code></div>
+            <div class="info">ℹ️ Verifique propagação: <span class="inline-code">dig +short app.orinjoias.com.br</span> deve retornar seu IP.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== PHASE 2 ==================== -->
+<div class="phase" data-phase="2">
+    <div class="phase-header">
+        <div class="phase-icon" style="background:var(--green-bg);color:var(--green);">🚀</div>
+        <div><div class="phase-title">Fase 2 — Deploy do ORION CRM</div><div class="phase-desc">Clone, .env, build, migrations, SSL</div></div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Clonar repositório</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">mkdir -p /opt && cd /opt</span>
+<span class="cmd">git clone https://github.com/SEU_USER/Orion-CRM.git orion</span>
+<span class="cmd">cd orion</span></code></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Criar e preencher .env</div><div class="step-time">~10 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">cp .env.example .env</span>
+<span class="cmd">nano .env</span></code></div>
+            <p><strong>Gerar os secrets:</strong></p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># JWT_SECRET</span>
+<span class="cmd">openssl rand -hex 64</span>
+
+<span class="comment"># JWT_REFRESH_SECRET (diferente do anterior!)</span>
+<span class="cmd">openssl rand -hex 64</span>
+
+<span class="comment"># OPERATOR_WEBHOOK_SECRET</span>
+<span class="cmd">openssl rand -hex 32</span>
+
+<span class="comment"># POSTGRES_PASSWORD</span>
+<span class="cmd">openssl rand -hex 24</span>
+
+<span class="comment"># UAZAPI_WEBHOOK_PATH (path secreto do webhook)</span>
+<span class="cmd">openssl rand -hex 16</span></code></div>
+            <p><strong>Variáveis obrigatórias para preencher no .env:</strong></p>
+            <div class="code-block"><code><span class="comment"># Core</span>
+NODE_ENV=production
+POSTGRES_PASSWORD=<span class="cmd">(gerado acima)</span>
+DATABASE_URL=postgres://orion:<span class="cmd">SUA_SENHA</span>@postgres:5432/orion_db
+REDIS_URL=redis://redis:6379
+JWT_SECRET=<span class="cmd">(gerado acima)</span>
+JWT_REFRESH_SECRET=<span class="cmd">(gerado acima)</span>
+OPERATOR_WEBHOOK_SECRET=<span class="cmd">(gerado acima)</span>
+
+<span class="comment"># URLs (ajustar para seu domínio)</span>
+APP_URL=https://orion.orinjoias.com.br
+FRONTEND_URL=https://orion.orinjoias.com.br
+
+<span class="comment"># uazapi</span>
+UAZAPI_SERVER_URL=https://free.uazapi.com
+UAZAPI_INSTANCE_TOKEN=<span class="cmd">(token da instância uazapi)</span>
+UAZAPI_WEBHOOK_PATH=<span class="cmd">(gerado acima)</span>
+
+<span class="comment"># OpenAI</span>
+OPENAI_API_KEY=sk-...
+
+<span class="comment"># Mercado Pago (se já tiver)</span>
+MP_ACCESS_TOKEN=
+MP_WEBHOOK_SECRET=
+
+<span class="comment"># n8n</span>
+N8N_API_KEY=<span class="cmd">(openssl rand -hex 32)</span></code></div>
+            <div class="warn">⚠️ NUNCA commitar o <span class="inline-code">.env</span> no git. Confirme que está no <span class="inline-code">.gitignore</span>.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Build e subir containers</div><div class="step-time">~5-10 min (primeiro build)</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Validar compose</span>
+<span class="cmd">docker compose config</span>
+
+<span class="comment"># Build e subir tudo</span>
+<span class="cmd">docker compose up -d --build</span>
+
+<span class="comment"># Verificar se todos estão healthy</span>
+<span class="cmd">docker compose ps</span></code></div>
+            <p>Todos os serviços devem aparecer como <span class="inline-code">Up</span> ou <span class="inline-code">healthy</span>. Se algum estiver <span class="inline-code">restarting</span>, checar logs:</p>
+            <div class="code-block"><code><span class="cmd">docker compose logs api --tail=50</span>
+<span class="cmd">docker compose logs postgres --tail=50</span></code></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Verificar health check</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">curl http://localhost/health</span></code></div>
+            <div class="success-box">✅ Resposta esperada: <span class="inline-code">{"status":"ok","db":"ok","redis":"ok"}</span></div>
+            <p>Se db ou redis estiverem "error", verificar as variáveis DATABASE_URL e REDIS_URL no .env.</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Configurar SSL (Let's Encrypt)</div><div class="step-time">~10 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Instalar certbot</span>
+<span class="cmd">apt install certbot -y</span>
+
+<span class="comment"># Parar nginx temporariamente para gerar cert</span>
+<span class="cmd">docker compose stop nginx</span>
+
+<span class="comment"># Gerar certificado (ajuste o domínio)</span>
+<span class="cmd">certbot certonly --standalone -d orion.orinjoias.com.br</span>
+
+<span class="comment"># Copiar certs para o nginx</span>
+<span class="cmd">cp /etc/letsencrypt/live/orion.orinjoias.com.br/fullchain.pem nginx/ssl/</span>
+<span class="cmd">cp /etc/letsencrypt/live/orion.orinjoias.com.br/privkey.pem nginx/ssl/</span></code></div>
+            <p>Depois, editar <span class="inline-code">nginx/nginx.conf</span>: descomentar os blocos SSL, ativar redirect 80→443, e reiniciar:</p>
+            <div class="code-block"><code><span class="cmd">docker compose up -d nginx</span></code></div>
+            <div class="info">ℹ️ Configurar renovação automática: <span class="inline-code">crontab -e</span> → adicionar <span class="inline-code">0 3 1 * * certbot renew --post-hook "docker compose -f /opt/orion/docker-compose.yml restart nginx"</span></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Provisionar admin (primeiro usuário)</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Chamar o webhook de provisioning para criar o primeiro admin:</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Gerar HMAC da assinatura</span>
+<span class="cmd">BODY='{"action":"provision","idempotency_key":"init-001","payload":{"admin":{"name":"Guilherme","email":"seu@email.com","password":"SenhaForte123!"},"branding":{"company_name":"ORIN Joias","primary_color":"#C8A97A"},"plan":{"type":"professional"}}}'</span>
+
+<span class="cmd">SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "SEU_OPERATOR_WEBHOOK_SECRET" | awk '{print $2}')</span>
+
+<span class="cmd">curl -X POST http://localhost/api/v1/operator/webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Operator-Signature: $SIG" \
+  -d "$BODY"</span></code></div>
+            <div class="success-box">✅ Esperado: <span class="inline-code">{"result":"success"}</span> → Agora você consegue logar no CRM com o email/senha definidos.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Testar login no CRM</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Abrir <span class="inline-code">https://orion.orinjoias.com.br/login</span> no navegador e logar com as credenciais do admin criado acima.</p>
+            <div class="success-box">✅ Se o dashboard carregou, o CRM está operacional.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== PHASE 3 ==================== -->
+<div class="phase" data-phase="3">
+    <div class="phase-header">
+        <div class="phase-icon" style="background:var(--purple-bg);color:var(--purple);">⚙️</div>
+        <div><div class="phase-title">Fase 3 — Configurar n8n</div><div class="phase-desc">Acessar, criar credenciais, importar workflow</div></div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Verificar n8n no docker-compose.yml</div><div class="step-time">~5 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>O n8n precisa estar definido como service no <span class="inline-code">docker-compose.yml</span>. Se ainda não estiver, adicionar:</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Adicionar ao docker-compose.yml</span>
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"  <span class="comment"># Só localhost — não expor publicamente</span>
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://orion.orinjoias.com.br
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - N8N_ENCRYPTION_KEY=<span class="cmd">$(openssl rand -hex 32)</span>
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - app_network
+    depends_on:
+      - api
+
+<span class="comment"># Adicionar no bloco volumes: do compose</span>
+volumes:
+  n8n_data:</code></div>
+            <div class="warn">⚠️ <strong>Sem o service n8n no compose, nada funciona.</strong> O <span class="inline-code">ports: "127.0.0.1:5678:5678"</span> garante que o editor só é acessível localmente (via SSH tunnel). A variável <span class="inline-code">N8N_ENCRYPTION_KEY</span> deve ser gerada uma vez e guardada — se mudar, todas as credenciais salvas são perdidas.</div>
+            <p>Subir o container:</p>
+            <div class="code-block"><code><span class="cmd">docker compose up -d n8n</span></code></div>
+            <p>Confirmar que está rodando:</p>
+            <div class="code-block"><code><span class="cmd">docker compose ps n8n</span></code></div>
+            <div class="success-box">✅ Esperado: <span class="inline-code">n8n   Up   0.0.0.0:5678->5678/tcp</span></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Acessar n8n via SSH tunnel</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>O n8n NÃO está exposto publicamente (segurança). Acesse via túnel SSH:</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># No seu computador local (não no VPS)</span>
+<span class="cmd">ssh -L 5678:localhost:5678 root@SEU_IP_HOSTINGER</span></code></div>
+            <p>Agora abra no navegador: <span class="inline-code">http://localhost:5678</span></p>
+            <p>Na primeira vez, o n8n vai pedir para criar uma conta de admin. <strong>Use senha forte.</strong></p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Criar credencial: API ORION</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>No n8n: <strong>Settings → Credentials → Add Credential</strong></p>
+            <p>Tipo: <span class="inline-code">Header Auth</span></p>
+            <div class="code-block"><code>Name:   ORION API
+Header: Authorization
+Value:  Bearer <span class="cmd">SEU_N8N_API_KEY_DO_ENV</span></code></div>
+            <p>Salvar. Essa credencial é usada em todos os nós que chamam a API do ORION.</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Criar credencial: uazapi</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Tipo: <span class="inline-code">Header Auth</span></p>
+            <div class="code-block"><code>Name:   uazapi WhatsApp
+Header: token
+Value:  <span class="cmd">SEU_INSTANCE_TOKEN_UAZAPI</span></code></div>
+            <div class="warn">⚠️ Use o token NOVO (rotacionado). Não use o que foi exposto na conversa anterior.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Criar credencial: OpenAI</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Tipo: <span class="inline-code">Header Auth</span> (o workflow usa HTTP Request direto para a API OpenAI)</p>
+            <div class="code-block"><code>Name:    OpenAI ORION
+Header:  Authorization
+Value:   Bearer sk-<span class="cmd">SUA_OPENAI_API_KEY</span></code></div>
+            <div class="info">ℹ️ Usamos Header Auth (não o nó nativo OpenAI) para ter controle total sobre <span class="inline-code">response_format: json_object</span> e parâmetros do modelo.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Configurar variáveis de ambiente no n8n</div><div class="step-time">~3 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Editar o <span class="inline-code">docker-compose.yml</span> no VPS e adicionar as variáveis ao service n8n:</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Adicionar ao environment do n8n no docker-compose.yml</span>
+<span class="comment"># ⚠️ OBRIGATÓRIO: sem WEBHOOK_URL, os webhooks geram URL interna</span>
+WEBHOOK_URL: https://orion.orinjoias.com.br
+N8N_HOST: 0.0.0.0
+N8N_PORT: 5678
+N8N_PROTOCOL: https
+GENERIC_TIMEZONE: America/Sao_Paulo
+
+<span class="comment"># Variáveis do workflow do chatbot</span>
+UAZAPI_SERVER_URL: https://free.uazapi.com
+ORION_API_URL: http://api:4000/api/v1
+ATENDENTE_WHATSAPP: 5521999999999
+CATALOGO_URL: https://orinjoias.com.br/catalogo
+INSTAGRAM_URL: https://instagram.com/orinjoias</code></div>
+            <div class="warn">⚠️ <strong>WEBHOOK_URL é obrigatório.</strong> Sem ele, a Production URL do webhook vai mostrar <span class="inline-code">http://localhost:5678/...</span> em vez do domínio público. A uazapi não conseguirá entregar mensagens.</div>
+            <p>Depois reiniciar o n8n:</p>
+            <div class="code-block"><code><span class="cmd">docker compose up -d n8n</span></code></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Importar workflow do chatbot</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>No n8n: <strong>Workflows → Import from File</strong> → selecionar o arquivo <span class="inline-code">ORION-WF-Bot-Qualificacao-WhatsApp.json</span></p>
+            <p>Após importar, abrir o workflow e:</p>
+            <p>1. <strong>Vincular credenciais</strong> — clicar em cada nó HTTP Request e selecionar a credencial correspondente:</p>
+            <div class="code-block"><code>Nós com "API" no nome     → credencial <span class="cmd">ORION API</span>
+Nós com "uazapi" ou envio  → credencial <span class="cmd">uazapi WhatsApp</span>
+Nó "OpenAI Qualificação"   → credencial <span class="cmd">OpenAI ORION</span></code></div>
+            <p>2. <strong>Verificar URLs</strong> — conferir que os nós apontam para <span class="inline-code">http://api:4000/api/v1/...</span> (rede Docker interna)</p>
+            <p>3. <strong>NÃO ativar ainda</strong> — primeiro testar manualmente na Fase 5</p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== PHASE 4 ==================== -->
+<div class="phase" data-phase="4">
+    <div class="phase-header">
+        <div class="phase-icon" style="background:var(--green-bg);color:var(--green);">📱</div>
+        <div><div class="phase-title">Fase 4 — Conectar uazapi + Webhook</div><div class="phase-desc">Configurar webhook da uazapi para apontar pro n8n</div></div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Copiar URL do webhook do n8n</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>No workflow importado, clicar no nó <strong>Webhook</strong> (primeiro nó). O n8n mostra duas URLs:</p>
+            <p>• <strong>Test URL</strong>: funciona só com workflow aberto no editor (para debug)</p>
+            <p>• <strong>Production URL</strong>: funciona quando o workflow está ativado</p>
+            <p>Copiar a <strong>Production URL</strong>. Vai ser algo como:</p>
+            <div class="code-block"><code>https://orion.orinjoias.com.br/webhook/XXXXXXXX</code></div>
+            <div class="warn">⚠️ Mas espera — o n8n não está exposto publicamente! O webhook precisa ser acessível pela uazapi (externa). Vamos resolver no próximo passo.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Expor webhook do n8n via NGINX (rota específica)</div><div class="step-time">~5 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Adicionar no <span class="inline-code">nginx/nginx.conf</span> uma rota <strong>APENAS</strong> para o webhook, usando o path secreto:</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Dentro do bloco server {} no nginx.conf
+# Apenas a rota do webhook é exposta — NÃO o editor do n8n</span>
+
+location /webhook/ {
+    proxy_pass http://n8n:5678/webhook/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 10s;
+}</code></div>
+            <p>Reiniciar nginx:</p>
+            <div class="code-block"><code><span class="cmd">docker compose restart nginx</span></code></div>
+            <p>Agora a URL do webhook fica:</p>
+            <div class="code-block"><code>https://orion.orinjoias.com.br/webhook/<span class="cmd">ID_DO_WEBHOOK_N8N</span></code></div>
+            <div class="info">ℹ️ O editor do n8n continua inacessível pela internet — só via SSH tunnel. Apenas <span class="inline-code">/webhook/*</span> é público.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Configurar webhook na uazapi</div><div class="step-time">~2 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>No painel da uazapi (<span class="inline-code">free.uazapi.com</span>), acessar sua instância e configurar o webhook:</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Via API da uazapi</span>
+<span class="cmd">curl -X POST https://free.uazapi.com/setWebhook \
+  -H "Content-Type: application/json" \
+  -H "token: SEU_INSTANCE_TOKEN" \
+  -d '{
+    "webhookUrl": "https://orion.orinjoias.com.br/webhook/ID_DO_WEBHOOK_N8N",
+    "events": ["message"]
+  }'</span></code></div>
+            <p>Ou configurar via painel web da uazapi se disponível.</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Verificar conexão WhatsApp</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">curl -s https://free.uazapi.com/status \
+  -H "token: SEU_INSTANCE_TOKEN" | jq .</span></code></div>
+            <div class="success-box">✅ Esperado: <span class="inline-code">{"connected": true, "number": "351931941768"}</span></div>
+            <p>Se <span class="inline-code">connected: false</span>, escanear QR code novamente no painel da uazapi.</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Rotacionar token da uazapi (se vazou)</div><div class="step-time">~3 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Se o token da instância foi exposto em logs, chats, ou código versionado, <strong>rotacionar imediatamente</strong>:</p>
+            <p><strong>Opção A — Painel Web:</strong></p>
+            <p>1. Acessar <span class="inline-code">free.uazapi.com</span> → sua instância → Settings</p>
+            <p>2. Clicar em <strong>Regenerate Token</strong> (ou equivalente)</p>
+            <p>3. Copiar o novo token</p>
+            <p><strong>Opção B — Via API (se disponível):</strong></p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="cmd">curl -X POST https://free.uazapi.com/regenerateToken \
+  -H "token: SEU_TOKEN_ATUAL" \
+  -H "Content-Type: application/json"</span></code></div>
+            <p><strong>Após rotacionar, atualizar em 2 lugares:</strong></p>
+            <p>1. <strong>n8n</strong>: Settings → Credentials → <span class="inline-code">uazapi WhatsApp</span> → atualizar o Value com novo token</p>
+            <p>2. <strong>docker-compose.yml</strong>: se o token estiver em variável de ambiente, atualizar e <span class="inline-code">docker compose up -d n8n</span></p>
+            <div class="warn">⚠️ O token antigo para de funcionar imediatamente. Se esquecer de atualizar no n8n, o chatbot vai parar de enviar mensagens.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== PHASE 5 ==================== -->
+<div class="phase" data-phase="5">
+    <div class="phase-header">
+        <div class="phase-icon" style="background:var(--gold-glow);color:var(--gold);">🧪</div>
+        <div><div class="phase-title">Fase 5 — Testar e Ativar</div><div class="phase-desc">Teste end-to-end, ativar workflow, monitorar</div></div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Teste manual: enviar mensagem pro número da ORIN</div><div class="step-time">~3 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Com o workflow do n8n no modo <strong>Test</strong> (botão "Test Workflow" no editor), envie uma mensagem WhatsApp de outro número para o número conectado na uazapi.</p>
+            <p>Verificar no n8n:</p>
+            <p>1. O webhook recebeu o payload?</p>
+            <p>2. A validação passou?</p>
+            <p>3. A chamada para API ORION retornou 200?</p>
+            <p>4. A IA respondeu com JSON válido?</p>
+            <p>5. A resposta foi enviada via uazapi?</p>
+            <p>6. Você recebeu a resposta no WhatsApp?</p>
+            <div class="warn">⚠️ Se falhar em algum nó, clicar nele no n8n para ver o input/output e o erro. Os erros mais comuns são: credencial errada, URL incorreta, ou payload em formato inesperado.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Verificar lead criado no CRM</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Após enviar a mensagem de teste, abrir o CRM (<span class="inline-code">https://orion.orinjoias.com.br</span>) e verificar:</p>
+            <p>• <strong>Inbox</strong> → conversa apareceu?</p>
+            <p>• <strong>Leads</strong> → lead foi criado com número correto?</p>
+            <p>• Mensagens inbound e outbound estão no histórico?</p>
+            <div class="success-box">✅ Se tudo apareceu, o pipeline está funcionando end-to-end.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Ativar workflow no n8n</div><div class="step-time">~1 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>No n8n, alternar o toggle <strong>Active</strong> do workflow para ON.</p>
+            <p>A partir de agora, toda mensagem que chegar no WhatsApp será processada automaticamente.</p>
+            <div class="info">ℹ️ Monitorar as primeiras horas: <span class="inline-code">docker compose logs n8n --tail=100 -f</span></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Configurar Error Workflow (monitoramento)</div><div class="step-time">~5 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Criar um workflow auxiliar no n8n que recebe alertas quando qualquer workflow falha:</p>
+            <p><strong>1. Criar workflow "Alerta de Erros":</strong></p>
+            <p>• Trigger: <span class="inline-code">Error Trigger</span> (nó nativo do n8n)</p>
+            <p>• Ação: <span class="inline-code">HTTP Request</span> → enviar mensagem via uazapi para o número do atendente</p>
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Body do nó HTTP Request (envio via uazapi)</span>
+{
+  "number": "{{ $env.ATENDENTE_WHATSAPP }}",
+  "text": "🚨 ALERTA ORION\n\nWorkflow falhou: {{ $json.workflow.name }}\nErro: {{ $json.execution.error.message }}\nHora: {{ $now.toFormat('dd/MM HH:mm') }}\n\nVerificar no n8n."
+}</code></div>
+            <p><strong>2. Ativar</strong> o workflow de alertas e copiar seu ID.</p>
+            <p><strong>3. Vincular</strong> ao workflow principal:</p>
+            <p>• No n8n: Settings → Workflows → selecionar o workflow do chatbot</p>
+            <p>• Em <span class="inline-code">Error Workflow</span>, selecionar "Alerta de Erros"</p>
+            <div class="info">ℹ️ Assim, se o chatbot parar de funcionar (API fora, OpenAI falhando, credencial expirada), você recebe imediatamente um WhatsApp avisando.</div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Warm-up do número WhatsApp</div><div class="step-time">~2 semanas</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <p>Números novos que enviam muitas mensagens automatizadas podem ser <strong>banidos pelo WhatsApp</strong>. Siga este cronograma gradual:</p>
+            <p><strong>Semana 1:</strong></p>
+            <p>• Máx. <strong>20 conversas/dia</strong></p>
+            <p>• Responda manualmente quando possível (mistura bot + humano)</p>
+            <p>• Não envie mensagens para números que nunca falaram com você</p>
+            <p><strong>Semana 2:</strong></p>
+            <p>• Máx. <strong>50 conversas/dia</strong></p>
+            <p>• Bot pode operar sozinho, mas monitore reports de spam</p>
+            <p><strong>Semana 3+:</strong></p>
+            <p>• Volume normal, sem limite artificial</p>
+            <p>• Manter anti-loop ativo (já configurado no workflow: 10+ msgs → handoff)</p>
+            <div class="warn">⚠️ <strong>Sinais de perigo:</strong> se clientes reportarem a mensagem como spam, ou se o número "cair" da uazapi (desconectar sozinho), pausar IMEDIATAMENTE o bot e investigar. O número pode ser suspenso temporariamente (24h) ou permanentemente.</div>
+            <p><strong>Boas práticas permanentes:</strong></p>
+            <p>• Sempre responder a mensagens iniciadas PELO CLIENTE (não cold outreach)</p>
+            <p>• Manter respostas naturais e personalizadas (o system prompt da IA já faz isso)</p>
+            <p>• Oferecer opção de "falar com humano" (handoff já configurado)</p>
+            <p>• Nunca enviar listas de broadcast ou mensagens em massa</p>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">Configurar backup automático</div><div class="step-time">~5 min</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">copiar</button><code><span class="comment"># Criar script de backup</span>
+<span class="cmd">cat > /opt/orion/scripts/backup.sh << 'EOF'
+#!/bin/bash
+set -euo pipefail
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/opt/orion/backups"
+mkdir -p $BACKUP_DIR
+docker compose -f /opt/orion/docker-compose.yml exec -T postgres \
+  pg_dump -U orion orion_db | gzip > "$BACKUP_DIR/orion_${DATE}.sql.gz"
+find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
+echo "Backup done: orion_${DATE}.sql.gz"
+EOF
+chmod +x /opt/orion/scripts/backup.sh</span>
+
+<span class="comment"># Agendar diário às 2h</span>
+<span class="cmd">(crontab -l 2>/dev/null; echo "0 2 * * * /opt/orion/scripts/backup.sh >> /var/log/orion-backup.log 2>&1") | crontab -</span></code></div>
+        </div>
+    </div>
+
+    <div class="step" data-step>
+        <div class="step-header" onclick="toggleDetail(this)">
+            <div class="step-check" onclick="event.stopPropagation();toggleDone(this)"></div>
+            <div class="step-info"><div class="step-title">🎉 Sistema operacional!</div><div class="step-time">Pronto</div></div>
+            <div class="step-expand">▾</div>
+        </div>
+        <div class="step-detail">
+            <div class="success-box">✅ <strong>ORION CRM + Chatbot WhatsApp está rodando em produção.</strong></div>
+            <p><strong>O que está funcionando:</strong></p>
+            <p>• CRM acessível via HTTPS com login seguro</p>
+            <p>• API com auth JWT + RBAC</p>
+            <p>• WhatsApp recebendo mensagens via uazapi</p>
+            <p>• IA qualificando leads automaticamente</p>
+            <p>• Leads criados no CRM com classificação</p>
+            <p>• Handoff para atendente humano quando necessário</p>
+            <p>• n8n orquestrando tudo sem exposição pública</p>
+            <p>• Backup automático diário do banco</p>
+            <p>• Monitoramento com alertas via WhatsApp</p>
+            <p>• Warm-up do número configurado</p>
+            <p><strong>Próximos passos:</strong></p>
+            <p>• Migrar uazapi para self-hosted (ativar HMAC)</p>
+            <p>• Configurar Mercado Pago (pagamentos)</p>
+            <p>• Ajustar system prompt da IA com base no feedback real</p>
+        </div>
+    </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">ORION CRM · Deploy Runbook v1.0 · Hostinger VPS · 2026-03-21</div>
+
+<script>
+const phases = [
+    { id:1, name:"VPS", icon:"🖥️" },
+    { id:2, name:"CRM Deploy", icon:"🚀" },
+    { id:3, name:"n8n Setup", icon:"⚙️" },
+    { id:4, name:"uazapi + Webhook", icon:"📱" },
+    { id:5, name:"Testar & Ativar", icon:"🧪" },
+];
+
+let activePhase = 1;
+
+function initNav() {
+    const nav = document.getElementById('nav');
+    phases.forEach(p => {
+        const pill = document.createElement('div');
+        pill.className = 'nav-pill' + (p.id === 1 ? ' active' : '');
+        pill.dataset.phase = p.id;
+        const phaseEl = document.querySelector(`[data-phase="${p.id}"]`);
+        const count = phaseEl ? phaseEl.querySelectorAll('[data-step]').length : 0;
+        pill.innerHTML = `${p.icon} ${p.name}<span class="pill-count">(${count})</span>`;
+        pill.onclick = () => showPhase(p.id);
+        nav.appendChild(pill);
+    });
+}
+
+function showPhase(id) {
+    activePhase = id;
+    document.querySelectorAll('.phase').forEach(p => p.classList.toggle('visible', +p.dataset.phase === id));
+    document.querySelectorAll('.nav-pill').forEach(p => p.classList.toggle('active', +p.dataset.phase === id));
+}
+
+function toggleDone(el) {
+    el.closest('.step').classList.toggle('done');
+    updateProgress();
+    save();
+}
+
+function toggleDetail(el) {
+    el.closest('.step').classList.toggle('open');
+}
+
+function updateProgress() {
+    const all = document.querySelectorAll('[data-step]');
+    const done = document.querySelectorAll('.step.done');
+    const pct = all.length ? Math.round(done.length / all.length * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = pct + '%';
+    document.getElementById('doneCount').textContent = done.length;
+    document.getElementById('totalCount').textContent = all.length;
+}
+
+function copyCode(btn) {
+    const code = btn.parentElement.querySelector('code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'copiado!';
+        setTimeout(() => btn.textContent = 'copiar', 1500);
+    });
+}
+
+function save() {
+    const state = [];
+    document.querySelectorAll('[data-step]').forEach((s, i) => { if (s.classList.contains('done')) state.push(i); });
+    try { localStorage.setItem('orion-deploy', JSON.stringify(state)); } catch(e) {}
+}
+
+function load() {
+    try {
+        const state = JSON.parse(localStorage.getItem('orion-deploy') || '[]');
+        const steps = document.querySelectorAll('[data-step]');
+        state.forEach(i => { if (steps[i]) steps[i].classList.add('done'); });
+    } catch(e) {}
+}
+
+initNav();
+load();
+updateProgress();
+</script>
+</body>
+</html>
