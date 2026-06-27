@@ -1,0 +1,3777 @@
+{
+  "name": "ORION-WF-Bot-v7-LARA-SDR",
+  "nodes": [
+    {
+      "id": "3068fa7a-cd7a-400e-915f-7c78dc041770",
+      "name": "Descargar Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1968,
+        1936
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://orinjoias.uazapi.com/getMedia/{{ $('Webhook').item.json.body.data.key?.id || $('Webhook').item.json.body.data.messageid || '' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mSkUIZk63j8UnFHU",
+          "name": "UAZAPI Token"
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "801ec600-22ad-4a94-a2b4-ae72eb271df0",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $('Webhook').item.json.body?.data?.message?.conversation || $('Webhook').item.json.body?.data?.text || $('Webhook').item.json.body?.data?.body || $('Webhook').item.json.body?.text || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "27793e12-a412-418f-9836-5ff216eadf22",
+      "name": "get_message (text)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1968,
+        1600
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "a33f66d8-1bd1-400b-b1ce-c2513f57bdb3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $('Webhook').item.json.body?.data?.message?.conversation || $('Webhook').item.json.body?.data?.text || $('Webhook').item.json.body?.data?.body || $('Webhook').item.json.body?.text || '' }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "5b401571-7d2c-4c5e-bb2e-06e2d683402a",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $('Webhook').item.json.body.data.messageType }}",
+                    "rightValue": "albumMessage"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "AlbumMessage"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "631fd381-296e-4434-9ae0-f13383adb95a",
+      "name": "Message Type",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1728,
+        1744
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "v1",
+              "name": "number",
+              "type": "string",
+              "value": "={{ (() => { const b = $('Webhook').item.json.body || $('Webhook').item.json; const m = b.data || b; const c = m.chatid || (m.key && m.key.remoteJid) || m.remoteJid || m.from || ''; const f = c.replace(/@.*/g,''); const d = f.replace(/\\\\D/g,''); return d.length >= 10 && d.length <= 11 ? '55'+d : d; })() }}"
+            },
+            {
+              "id": "v2",
+              "name": "wait_buffer",
+              "type": "string",
+              "value": "5"
+            },
+            {
+              "id": "v3",
+              "name": "wait_conversation",
+              "type": "string",
+              "value": "600"
+            },
+            {
+              "id": "v4",
+              "name": "max_chat_history",
+              "type": "string",
+              "value": "40"
+            },
+            {
+              "id": "v5",
+              "name": "profile_name",
+              "type": "string",
+              "value": "={{ (() => { const b = $('Webhook').item.json.body || $('Webhook').item.json; const m = b.data || b; return m.senderName || m.pushname || m.pushName || 'Cliente'; })() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "40f61960-a240-41f3-b84c-6c29197807ba",
+      "name": "Global Variables",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1408,
+        1760
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f11a017f-dc64-4db4-9836-d13d164a62cf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ JSON.parse($json.message.last()).sessionID }}",
+                    "rightValue": "={{ $('Webhook').item.json.body.data.key.id }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Ignore"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "4fca4c39-e8bf-490b-8e2e-176c95d9156e",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    },
+                    "leftValue": "={{ JSON.parse($json.message.last()).date_time }}",
+                    "rightValue": "={{ $now.minus($('Global Variables').item.json.wait_buffer, 'seconds') }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Continue"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Wait"
+        }
+      },
+      "id": "25d687a5-4ffc-405e-b56e-03013a894f0e",
+      "name": "Buffer Route",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        3616,
+        2288
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{  $('Global Variables').item.json.number }}",
+        "messageData": "={{ JSON.stringify({\n  message   : $json.message ? $json.message : $('get_message (media)').item.json.message,\n  sessionID : $('Webhook').item.json.body.data.key.id,\n  date_time : $node[\"Webhook\"].json.body.data.messageTimestamp.toDateTime('s')\n}) }}\n",
+        "tail": true
+      },
+      "id": "a5a4181c-f1f6-495a-a32f-f7969764adc0",
+      "name": "Push to Buffer",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        3216,
+        2304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "message",
+        "key": "={{  $('Global Variables').item.json.number }}",
+        "options": {}
+      },
+      "id": "bccf8f52-62cb-4dc8-ba36-b001ce06848d",
+      "name": "Get From Buffer",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        3424,
+        2304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{  $('Global Variables').item.json.number }}"
+      },
+      "id": "6e249e0a-e145-435a-825c-0246f7091b84",
+      "name": "Delete Buffer",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        3840,
+        2304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b594f1da-51e8-47a4-a636-7928a73b69f8",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.message.map(m => JSON.parse(m).message).join('\\n') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2a44f7ed-fe21-4173-9e5b-56349a996114",
+      "name": "Normalize Buffer",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        4048,
+        2304
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {},
+      "id": "c77dff93-f6dc-4a9f-93e1-de98605e0218",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3840,
+        2144
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=Media_{{  $('Global Variables').item.json.number }}",
+        "messageData": "={{ ($('Webhook').item.json.body.data.message.albumMessage.expectedImageCount + $('Webhook').item.json.body.data.message.albumMessage.expectedVideoCount).toString() }}",
+        "tail": true
+      },
+      "id": "3fda8031-85c3-4301-8d8c-0e80583a5a40",
+      "name": "Push to Buffer (AlbumGroup)",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        1968,
+        1760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=Media_{{  $('Global Variables').item.json.number }}",
+        "options": {}
+      },
+      "id": "25e20eb6-c442-41bc-82dd-a594d4404010",
+      "name": "Check AlbumGroup",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        2800,
+        2304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=Media_{{  $('Global Variables').item.json.number }}",
+        "messageData": "={{ $('Normalize input').item.json.message }}",
+        "tail": true
+      },
+      "id": "d67f6545-0abb-4037-9a03-1c2e5c4bea10",
+      "name": "Push Media to Buffer",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        3216,
+        1984
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "131b95f2-cb9f-4d8c-9c2b-ca94383322dd",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.propertyName.length-1 }}",
+              "rightValue": "={{ parseInt($json.propertyName[0]) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bdc2da23-51dc-4ae8-8b43-9182aaddf377",
+      "name": "Completed?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        3616,
+        1984
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=Media_{{  $('Global Variables').item.json.number }}"
+      },
+      "id": "66c2b5ea-2317-4264-8e5a-eba4a4af0ae8",
+      "name": "Delete Media Buffer",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        3840,
+        1968
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b594f1da-51e8-47a4-a636-7928a73b69f8",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.propertyName.slice(1).join('\\n') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d4506ca4-13b6-4e05-8360-d05654217636",
+      "name": "Normalize MediaGroup Buffer",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        4048,
+        1968
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=Media_{{  $('Global Variables').item.json.number }}",
+        "options": {}
+      },
+      "id": "f239e9f7-df49-4594-b9c4-9eab0d2344d7",
+      "name": "Get Album From Buffer",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        3424,
+        1984
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "9062d3ba-1151-472f-95e0-42f54cbfb929",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.propertyName }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc745d6b-701a-46f7-8892-7ef1006b13a8",
+      "name": "Album?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        3008,
+        2128
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6d7accb-8ef6-4c41-9b0a-9e0b4301dffd",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.message || $json.chatInput }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4b5145e3-fc86-4f75-b4cc-1f83a82f6232",
+      "name": "Get Message",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        4336,
+        2128
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=Chats_{{  $('Global Variables').item.json.number }}"
+      },
+      "id": "3d184031-6dde-42e1-a491-09225e94a936",
+      "name": "Delete Buffer (chat_history)",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        8864,
+        2192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('Global Variables').item.json.wait_buffer }}"
+      },
+      "id": "f8e13e3d-1963-42b5-af32-638221abc74f",
+      "name": "Wait For User Other Fast Message",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        3840,
+        2464
+      ],
+      "webhookId": "9b345d41-1595-4bc3-bb98-64e44682aa43",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0f3b823-dda9-42e9-936b-4ca4123026ca",
+              "name": "history",
+              "type": "string",
+              "value": "={{ $json.propertyName.slice(-$('Global Variables').item.json.max_chat_history).join('\\n') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c04113d1-4f5f-4278-9059-471fe6bf0ed6",
+      "name": "Get chat_history",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        6112,
+        2080
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {},
+      "id": "d0fa7a20-9ff9-4094-ae2e-5ca4d64b3e99",
+      "name": "No Operation, do nothing1",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        8864,
+        2048
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f11a017f-dc64-4db4-9836-d13d164a62cf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ JSON.parse($json.message.last()).sessionID }}",
+                    "rightValue": "={{ $('Webhook').item.json.body.data.key.id }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Ignore"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "4fca4c39-e8bf-490b-8e2e-176c95d9156e",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    },
+                    "leftValue": "={{ JSON.parse($json.message.last()).date_time }}",
+                    "rightValue": "={{ $now.minus($('Global Variables').item.json.wait_conversation, 'seconds') }}"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Continue"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Wait"
+        }
+      },
+      "id": "ef4c0c24-0c33-4757-bbc6-726e36570127",
+      "name": "Buffer (chat_history) Route",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        8608,
+        2064
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('Global Variables').item.json.wait_conversation }}"
+      },
+      "id": "6256a7ad-6b16-4d37-bece-f87fc3b89eaf",
+      "name": "Wait For end of conversation",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        8864,
+        2368
+      ],
+      "webhookId": "06711a97-b08d-4552-aab8-868b1b8bbc5c",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=Chats_buffer{{  $('Global Variables').item.json.number }}",
+        "messageData": "={{ JSON.stringify({\n  sessionID : $('Webhook').item.json.body.data.key.id,\n  date_time : $node[\"Webhook\"].json.body.data.messageTimestamp.toDateTime('s')\n}) }}\n",
+        "tail": true
+      },
+      "id": "dbb2d1d0-18d3-4c34-a9b0-e8ba0abd1917",
+      "name": "Push to Buffer (chat_history)",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        8176,
+        2080
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "message",
+        "key": "=Chats_buffer{{  $('Global Variables').item.json.number }}",
+        "options": {}
+      },
+      "id": "5dc4db3a-4cb6-4f75-a8c6-56514137750c",
+      "name": "Get From Buffer(chat_history)",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        8416,
+        2080
+      ],
+      "typeVersion": 1
+    },
+    {
+      "id": "acdb096a-64be-473c-8bc9-9b4e01315677",
+      "name": "OpenAI Chat Model (Refiner)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        6544,
+        2272
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "jlKvv3f9f18hHyJx",
+          "name": "OpenAI API Key"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=Chats_buffer{{  $('Global Variables').item.json.number }}"
+      },
+      "id": "fd1118a6-8586-42c1-8f5a-178866deece5",
+      "name": "Delete Buffer (chat_history)2",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        9056,
+        2192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-inbound",
+        "options": {}
+      },
+      "id": "c9a89669-a7a1-4d6e-af94-8241a993a9ca",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        912,
+        1760
+      ],
+      "webhookId": "orion-whatsapp-inbound",
+      "typeVersion": 2.1
+    },
+    {
+      "id": "6c6db252-8067-4c8e-9ba2-7280e280aedb",
+      "name": "Read Messages",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        1216,
+        896
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "0f3d5ec8-cc88-4d6d-9f1e-cd31ea4b0980",
+      "name": "Open session",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        1216,
+        704
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chat_history",
+          "cachedResultName": "chat_history"
+        },
+        "limit": "={{ $('Global Variables').item.json.max_chat_history }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_whatsapp_number",
+              "value": "={{ $('Global Variables').item.json.number }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "message_text"
+          ]
+        }
+      },
+      "id": "bd1017ec-e1b3-4e75-b6c1-a2b1eea076b0",
+      "name": "Get chat_history From DataBase",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        5168,
+        2352
+      ],
+      "retryOnFail": true,
+      "typeVersion": 2.6,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "message_text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c8f523a-4933-4c82-892b-0c3820fdfe63",
+      "name": "Aggregate all Messges",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        5360,
+        2352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "761329c9-499f-4328-bc11-835edcfd003c",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.propertyName[0] }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3cf1c290-c7c8-4452-a6e0-f7ac9386ab2a",
+      "name": "chat_history In Buffer?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4992,
+        2128
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "id": "6ad75b38-34bd-46d2-b54b-455534e83630",
+      "name": "Writting...",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        1424,
+        1088
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS chat_history (\n    message_id BIGSERIAL PRIMARY KEY,\n    user_whatsapp_number VARCHAR(25) NOT NULL,\n    message_text TEXT NOT NULL,\n    message_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\nCREATE INDEX IF NOT EXISTS idx_chat_history_user_timestamp \nON chat_history (user_whatsapp_number, message_timestamp);",
+        "options": {}
+      },
+      "id": "1694ed3c-d7ed-4ddc-8912-164d18975fc1",
+      "name": "Create Table chat_history",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1104,
+        368
+      ],
+      "typeVersion": 2.6
+    },
+    {
+      "id": "c8a87e0c-b693-4e2f-aebf-ceaaceb29595",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        7424,
+        2080
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://orinjoias.uazapi.com/send/text",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\\n  \"number\": \"{{ $('Global Variables').item.json.number }}\",\\n  \"text\": \"{{ $json.reponse }}\"\\n}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mSkUIZk63j8UnFHU",
+          "name": "UAZAPI Token"
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "dc6711be-d817-4e09-b0b5-a8a663607ad2",
+      "name": "Extract from CSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        2736
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "fromIcs",
+        "options": {}
+      },
+      "id": "9c1a51b8-b00a-46a5-b9e4-597387417af1",
+      "name": "Extract from ICS",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        3024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "id": "91cb3721-2940-4faf-b675-3dbb2634840d",
+      "name": "Extract from JSON",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        3168
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "ods",
+        "options": {}
+      },
+      "id": "2567e452-58e8-416e-888b-9e05b9090163",
+      "name": "Extract from ODS",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        3312
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "9ee5e360-3992-4f7d-b6ae-246b78c8fa35",
+      "name": "Extract from PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        3472
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "rtf",
+        "options": {}
+      },
+      "id": "99943307-996c-4a3b-9e62-8a2126e31819",
+      "name": "Extract from RTF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        3776
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "b0fe80d5-7480-4682-8387-8cd84393b32a",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        3920
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "id": "ee2b462b-c577-41a1-8679-f6c571a09159",
+      "name": "Extract from XLSX",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        4208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "id": "b4b638ed-5b5a-4468-b4a4-b7f27b808871",
+      "name": "Analyze audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1280,
+        2432
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "contentType": "multipart-form-data",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            },
+            {
+              "name": "language",
+              "value": "pt"
+            },
+            {
+              "name": "response_format",
+              "value": "text"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1jVFNXYqamI8l2Ot",
+          "name": "Groq API"
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8935452-fe20-469d-a68d-1aad056cb8dd",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $('Descargar Media').item.json.data?.caption ? \"Captions: \" + $('Descargar Media').item.json.data.caption : \"\" }}\nFile name:{{ $('Descargar Media').item.json.data.fileName }}\nFile type:{{ $('Get Mime Type').item.json.fileTypeCategory }}\nExtracted data from file:\n{{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "27d98d0d-58b8-443d-9d34-f1d0fb9a4516",
+      "name": "get_message (File message)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2112,
+        3152
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "f765c4c8-d702-470b-b810-7f3004d9fa08",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        1456,
+        2736
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8935452-fe20-469d-a68d-1aad056cb8dd",
+              "name": "message",
+              "type": "string",
+              "value": "=It was not possible to process the file.File type not supported."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e502ef06-bca0-453a-8894-0affaff2fa3e",
+      "name": "get_error_message",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1280,
+        4368
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "sourceData": "binary",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "pageTitle",
+              "cssSelector": "title"
+            },
+            {
+              "key": "metaDescription",
+              "cssSelector": "meta[name=\"description\"]"
+            },
+            {
+              "key": "fullBodyText",
+              "cssSelector": "body",
+              "returnValue": "html"
+            }
+          ]
+        },
+        "options": {
+          "cleanUpText": true
+        }
+      },
+      "id": "9d472f84-1ef1-40cb-82e7-719fd7000fcb",
+      "name": "HTML Extract Generic1",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        1280,
+        2880
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the first item from the input array.\nconst firstItem = items[0];\n\n// Create a new object that has a single key: \"data\".\n// The value of \"data\" will be the entire json object from the input.\n// This gathers all fields (First Name, Last Name, Age, etc.) dynamically.\nconst result = {\n  data: firstItem.json\n};\n\n// Return the newly structured object.\n// It will be outputted as a single item with a 'json' property\n// containing the 'data' object.\nreturn result;"
+      },
+      "id": "82f4508c-aca2-4b74-b7e7-61641c2449a2",
+      "name": "Get ODS data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1456,
+        3312
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8f16a0d-0273-41c9-89ad-14a9a21a4875",
+      "name": "Normalize ODS",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1616,
+        3312
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e940c6a8-f313-4ee5-aa4e-02dcc7168d44",
+      "name": "Normalize CSV",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1616,
+        2736
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4ab7227-9db9-4c74-aa17-80071ee0a7f0",
+              "name": "data",
+              "type": "string",
+              "value": "=Page title:  {{ $json.pageTitle}}\nMeta description: {{ $json.metaDescription }}\nbody: {{ $json.fullBodyText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "71f490ba-61a1-4737-875c-e1fdb3d15154",
+      "name": "Normalize HTML",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        2880
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2c39585-31a4-48f1-ab2e-d127e55601b2",
+      "name": "Normalize ICS",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        3024
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b58a311a-94f0-4098-a8a6-170c140bd8b3",
+      "name": "Normalize JSON",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        3168
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "acd71229-d42f-465d-94bf-7dfb778703d1",
+      "name": "Normalize PDF",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1616,
+        3456
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b42370d0-8168-49e6-afd8-d46c90cf9241",
+      "name": "Normalize RTF",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1616,
+        3776
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b136b15b-bd61-4588-a38e-20cb4a5da56a",
+      "name": "Normalize text file",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        3920
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "61f3aba5-20af-4b05-bebd-4f30489d0700",
+      "name": "Normalize XML",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        4064
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "options": {}
+      },
+      "id": "b88503f3-3acf-43ee-b44c-f9410ca75453",
+      "name": "Extract from XML",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1280,
+        4064
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1fc00f6e-ad2b-464b-b42f-9b5cc6b71e2b",
+      "name": "Normalize XLSX",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1616,
+        4208
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the first item from the input array.\nconst firstItem = items[0];\n\n// Create a new object that has a single key: \"data\".\n// The value of \"data\" will be the entire json object from the input.\n// This gathers all fields (First Name, Last Name, Age, etc.) dynamically.\nconst result = {\n  data: firstItem.json\n};\n\n// Return the newly structured object.\n// It will be outputted as a single item with a 'json' property\n// containing the 'data' object.\nreturn result;"
+      },
+      "id": "74de89ed-af3f-47bb-9b9c-b994a316f9e3",
+      "name": "Get RTF data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1456,
+        3776
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the first item from the input array.\nconst firstItem = items[0];\n\n// Create a new object that has a single key: \"data\".\n// The value of \"data\" will be the entire json object from the input.\n// This gathers all fields (First Name, Last Name, Age, etc.) dynamically.\nconst result = {\n  data: firstItem.json\n};\n\n// Return the newly structured object.\n// It will be outputted as a single item with a 'json' property\n// containing the 'data' object.\nreturn result;"
+      },
+      "id": "6f62da6c-32ba-4acc-8bea-4643a7fe3eba",
+      "name": "Get RTF data1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1456,
+        4208
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "333a436f-c087-4250-a181-40657874959b",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.text }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a3824f70-80fd-44c8-be70-e32cf6d2c26d",
+      "name": "Text?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1456,
+        3472
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "id": "3b1dc9af-f87b-48a9-ba64-c23460b43cc3",
+      "name": "Analyze document",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1456,
+        3616
+      ],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "text": "Extraia todo o texto e dados relevantes deste documento. Responda em português.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "jlKvv3f9f18hHyJx",
+          "name": "OpenAI API Key"
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24b93984-e305-4c11-a856-5fa0bfaaaa79",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.content?.parts?.[0]?.text || $json.text || $json.choices?.[0]?.message?.content || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "34a65725-8005-446f-98da-4d6068a1eaf3",
+      "name": "Normalize PDF (AI)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1616,
+        3616
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "id": "2188e2ae-bb96-44b1-baa6-9ac055fc7cda",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1280,
+        3616
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb807b26-c415-42d2-9cef-707825d6fa82",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8877af77-2336-48f8-b6be-9f426df22e25",
+      "name": "Normalize input",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2608,
+        2304
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data.base64",
+        "options": {}
+      },
+      "id": "a70cf6e8-1fff-4065-af6e-9d1f79c66324",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "position": [
+        608,
+        3296
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "id": "4083d78a-775c-4085-97a8-710c51e8d0a5",
+      "name": "Analyze video",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1280,
+        2592
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "video-fallback",
+              "name": "data",
+              "type": "string",
+              "value": "O cliente enviou um vídeo. Vídeos não podem ser analisados diretamente. Peça ao cliente para descrever o que está no vídeo ou enviar como foto."
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8935452-fe20-469d-a68d-1aad056cb8dd",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json.data || 'O cliente enviou um vídeo. Peça para descrever ou enviar como foto.' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d3c8aed-82e3-4522-9788-91aa7389f160",
+      "name": "get_message (Video)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        2592
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8935452-fe20-469d-a68d-1aad056cb8dd",
+              "name": "data",
+              "type": "string",
+              "value": "=Transcrição do áudio: {{ $json.text || $json.data || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "52ca5378-0bfa-439d-849e-ea7151930686",
+      "name": "get_message (Audio)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        2432
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8935452-fe20-469d-a68d-1aad056cb8dd",
+              "name": "data",
+              "type": "string",
+              "value": "=Descrição da imagem: {{ $json.content?.parts?.[0]?.text || $json.text || $json.choices?.[0]?.message?.content || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0912e7ec-818f-4ccf-b29e-4fb01bf70660",
+      "name": "get_message (Image)",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1456,
+        2272
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  // --- IMPORTANTE ---\n  // Asumimos que el MIME type está en esta ruta.\n  // ¡Verifica que 'item.json.data.mimetype' es correcto para tus datos!\n  // Podría ser 'item.json.mimetype' o similar.\n  const mimetype = $('Descargar Media').first().json.data.mimetype || '';\n\n  let fileTypeCategory = 'other'; // Valor por defecto para tipos no reconocidos\n\n  // Usamos switch(true) para evaluar diferentes condiciones basadas en el mimetype\n  switch (true) {\n    // === Imágenes ===\n    case mimetype.startsWith('image/'):\n      fileTypeCategory = 'image';\n      break;\n\n    // === Audio ===\n    // Incluye mp3 ('audio/mpeg'), ogg, wav, etc.\n    case mimetype.startsWith('audio/'):\n      fileTypeCategory = 'audio';\n      break;\n\n    // === Video ===\n    // Incluye mp4, webm, mov ('video/quicktime'), etc.\n    case mimetype.startsWith('video/'):\n      fileTypeCategory = 'video';\n      break;\n\n    // === Documentos de Texto y Ofimática ===\n    case mimetype === 'application/pdf':\n      fileTypeCategory = 'pdf';\n      break;\n    \n    // Spreadsheets (Excel, ODS, etc.)\n    case mimetype === 'application/vnd.ms-excel':\n    case mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':\n    case mimetype === 'application/vnd.oasis.opendocument.spreadsheet':\n      fileTypeCategory = 'spreadsheet';\n      break;\n\n    // Word Documents\n    case mimetype === 'application/msword':\n    case mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':\n      fileTypeCategory = 'document';\n      break;\n    \n    // Archivos de texto plano (txt, md, log)\n    case mimetype === 'text/plain':\n      fileTypeCategory = 'text';\n      break;\n\n    case mimetype === 'text/csv':\n      fileTypeCategory = 'csv';\n      break;\n\n    case mimetype === 'text/html':\n      fileTypeCategory = 'html';\n      break;\n    \n    case mimetype === 'application/rtf':\n      fileTypeCategory = 'rtf';\n      break;\n\n    // === Datos Estructurados ===\n    case mimetype === 'application/json':\n      fileTypeCategory = 'json';\n      break;\n\n    case mimetype === 'application/xml':\n    case mimetype === 'text/xml':\n      fileTypeCategory = 'xml';\n      break;\n\n    // === Otros ===\n    case mimetype === 'text/calendar': // para .ics\n      fileTypeCategory = 'ics';\n      break;\n  }\n\n  // Añadimos la nueva propiedad 'fileTypeCategory' al objeto json del item\n  item.json.fileTypeCategory = fileTypeCategory;\n  \n  // Añadimos el item modificado al array de resultados\n  results.push(item);\n}\n\n// Devolvemos el array con todos los items modificados\nreturn results;"
+      },
+      "id": "6a66a1b2-1eef-453e-ae79-ad1d806f6cd3",
+      "name": "Get Mime Type",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        816,
+        3296
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "1919febf-c06b-41d1-a02c-1082f2e444e4",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "image"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "51250085-0cb5-4442-b711-d7ef71c3c927",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "audio"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "886256b8-5fa1-470a-a161-24a3d9d28285",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "video"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "video"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f1aefe24-17fb-4bf8-84fb-949a6802b66e",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "csv"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "csv"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "b09d29b5-b263-4115-963d-d6879de78649",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "html"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "html"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "2a7822f4-889b-41d3-8a1c-7f4405eacb42",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "ics"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "ics"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f09cd376-96df-4f3d-9218-6a918715335a",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "json"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "json"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "1bf5c1f9-38a9-4bc5-8757-b85f98441579",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "ods"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "ods"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "4988d14f-4e3f-4494-96b0-a1a9d70a2787",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "pdf"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "pdf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f5bc921e-c083-4b12-8167-86a24e39fe5c",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "rtf"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "rtf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "29251fca-c611-419c-85a2-a9e1ad6bd102",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "text file"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "text file"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "fd1cbb91-f3c6-4b20-91dc-2e490f77fe96",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "xml"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "xml"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "16fc2a80-c341-4a5d-9d50-a1856ffb5242",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.fileTypeCategory }}",
+                    "rightValue": "spreadsheet"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "spreadsheet"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "b45c9a72-3b1c-41b2-9caf-5ee10b5ebfcf",
+      "name": "Media Type",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1008,
+        3104
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "id": "6ee06090-67f3-4514-8797-5bb62f136826",
+      "name": "Analyze Image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1280,
+        2272
+      ],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "text": "Descreva esta imagem em detalhes em português. Se for uma foto de joia, descreva o tipo de peça, material aparente, estilo e qualquer texto visível.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "jlKvv3f9f18hHyJx",
+          "name": "OpenAI API Key"
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "2178effc-f7d2-4a20-b0c5-499c89352877",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        928,
+        368
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0f4cdb2c-9407-4783-83c6-4440faa74f00",
+              "name": "reponse",
+              "type": "string",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6387dd8e-69ed-46a1-b391-3ef1b95a70e4",
+      "name": "Agent Response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        7248,
+        2080
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# INPUTS\n<RETRIEVED_CONTEXT>\n{{ $json.text }}\n</RETRIEVED_CONTEXT>\n\n<USER_MESSAGE>\n{{ $('Get Message').item.json.message }}\n</USER_MESSAGE>\n\n<CURRENT_DATE>\n{{ $now.format('cccc, dd/MM/yyyy HH:mm') }}\n</CURRENT_DATE>\n\n<CLIENT_NAME>\n{{ $('Global Variables').item.json.profile_name }}\n</CLIENT_NAME>",
+        "options": {
+          "systemMessage": "Você é Lara, consultora da ORIN Joias em Balneário Camboriú.\n\n## Quem você é\nConsultora experiente de joalheria premium. Acolhedora, direta e genuína. Você não é robô — você é a Lara.\n\n## Como você fala\n- Como uma pessoa real no WhatsApp: frases curtas, tom quente, sem formalidade\n- Máximo 2-3 frases por mensagem\n- Use no máximo 1 emoji por mensagem (✨ 💎 💛)\n- Nunca use listas, bullets ou formatação de documento\n- Nunca comece com \"Olá!\" no meio da conversa — só na primeira mensagem\n- Nunca repita o nome do cliente\n- Varie suas respostas — nunca use a mesma frase duas vezes\n\n## Seu objetivo\nQualificar o cliente e agendar uma visita presencial ou online. Você NÃO vende joias diretamente.\nColete informações conversando naturalmente: ocasião, tipo de peça, material, estilo, urgência.\nQuando tiver dados suficientes, sugira agendar uma visita.\n\n## Regras invioláveis\n1. Se o cliente já deu uma informação no histórico, USE-A. NUNCA pergunte o que já sabe.\n2. Se o cliente disser \"já falei\", \"já disse\", \"já respondi\" — olhe o RETRIEVED_CONTEXT, encontre a informação e use.\n3. Nunca invente informação sobre produtos, preços ou disponibilidade que não esteja na base abaixo.\n4. Se não sabe a resposta, diga \"Vou confirmar com a equipe e te retorno, tá bom? ✨\"\n5. Nunca revele que é IA. Nunca prometa preço exato ou prazo de produção.\n6. Quando o cliente informar data/horário para agendamento, CONFIRME o que ele disse e avance (não pergunte de novo).\n7. NUNCA se apresente de novo se já se apresentou no histórico.\n\n## Fluxo de qualificação (natural, NÃO robótica)\nColete estes dados ao longo da conversa (1 pergunta por vez, só o que falta):\n- Ocasião (casamento, presente, formatura, uso pessoal...)\n- Tipo de peça (anel, aliança, colar, brinco, pulseira...)\n- Material preferido (ouro amarelo, branco, rosé, prata)\n- Estilo (discreto, marcante, clássico, moderno)\n- Urgência (quando precisa?)\nQuando o cliente demonstrar interesse forte (3+ dados coletados), sugira agendar visita.\n\n## Fluxo de agendamento\n1. Se não sabe o que o cliente quer ver → pergunte (\"O que gostaria de ver na visita?\")\n2. Se não tem data → pergunte (\"Qual dia fica bom pra você?\")\n3. Se tem data mas não período → pergunte (\"Manhã ou tarde?\")\n4. Se tem data + período → ofereça horários dentro do disponível\n5. Se tem tudo → confirme:\n   📅 [dia da semana], [dd/mm] às [HH:MM]\n   📍 ORIN Joias — Sala 316, Av. Brasil 1500, Balneário Camboriú\n   🚗 Estacionamento: R. 101, 63 — traga o ticket que validamos!\n\nDATAS: Use CURRENT_DATE para resolver \"amanhã\", \"hoje\", \"segunda\" etc. Sempre responda com dia + data + horário.\n\n## Horários\nSeg-Sex: 9h-18h | Sáb: 9h-13h | Dom: fechado | Duração: 45min | Antecedência: 24h\n\n## Fuga de assunto\n1ª: bom humor e volta | 2ª: \"Haha, essa não é minha área 😄\" | 3ª: encerre\n\n## BASE DE CONHECIMENTO\n\n### ORIN Joias\nJoalheria de design autoral e produção artesanal. Diferenciais: design autoral, produção artesanal, peças sob medida, atendimento consultivo. Cada peça materializa histórias e momentos.\n\n### Peças e materiais\nCategorias: anéis, colares, brincos, pulseiras, alianças, joias personalizadas, joias masculinas\nMateriais: ouro 18k (amarelo, branco, rosé), prata 925, pedras naturais e preciosas\nSim: anel de noivado, aliança casamento, anel formatura (pedra da profissão), peças exclusivas sob encomenda\nSim: pode trazer pedra própria pra avaliação | gravação | ajuste de tamanho\n\n### Preços (estimativa)\nAnéis: ~R$2.000+ | Colares: ~R$1.500+ | Brincos: ~R$900+ | Pulseiras: ~R$1.200+ | Personalizadas: sob orçamento\n\n### Produção e pagamento\nPrazo: por projeto, após confirmação pgto. Tem peças prontas + sob medida.\nPagamento: crédito, débito, PIX, transferência, parcelamento. Orçamento sem compromisso.\n\n### Troca/manutenção\nPersonalizadas: sem troca. Coleção: caso a caso. Serviços: limpeza, polimento, manutenção.\n\n### Atendimento\nOBRIGATÓRIO agendar. Duração: ~45min. Presencial ou online (WhatsApp + inspirações).\n\n### Localização\nORIN Joias — Sala 316, Av. Brasil 1500, Anexo Hotel Sibara, Centro — Balneário Camboriú/SC\nEstacionamento: R. 101, 63 — traga ticket que validamos\nHorário: seg-sex 9h-18h, sáb 9h-13h, dom fechado\n\n### Links\nInstagram: https://www.instagram.com/orinjoias/\nCatálogo: https://crm.orinjoias.com/loja\n\n## EXEMPLOS\n\nCliente: \"Vocês fazem aliança de casamento?\"\nLara: \"Sim, trabalhamos com alianças clássicas e personalizadas, tudo em ouro 18k ✨ Vocês já têm um estilo em mente?\"\n\nCliente: \"Quero algo em ouro rosé\"\nLara: \"Rosé é lindo! É pra uma ocasião especial ou uso no dia a dia?\"\n\nCliente: \"Casamento em dezembro\"\nLara: \"Que momento especial! Dezembro dá tempo de criar algo bem exclusivo. Quer agendar uma visita pra ver as opções? 💎\"\n\nCliente: \"Pode ser amanhã\"\nLara: \"Amanhã! Manhã ou tarde fica melhor?\"\n\nCliente: \"14h\"\nLara: \"Perfeito ✨\\n📅 [dia], [data] às 14:00\\n📍 ORIN Joias — Sala 316, Av. Brasil 1500\\n🚗 Estacionamento: R. 101, 63 — traga o ticket!\\nTe espero lá!\"\n\nCliente: \"Quanto custa um anel?\"\nLara: \"Depende do projeto — anéis começam a partir de R$2.000 e variam conforme design e pedras. Quer agendar uma visita pra ver opções? ✨\"\n\nCliente: \"Já falei que é pra casamento\"\nLara: \"Verdade! Pra aliança de casamento, o ideal é agendar uma visita. Que dia funciona pra vocês? 💎\"\n\nCliente: \"Vocês fazem bolo?\"\nLara: \"Haha, bolo não 😄 Mas se precisar de joia especial pra ocasião, tô aqui!\"\n\nCliente: \"Vocês fazem manutenção e limpeza?\"\nLara: \"Fazemos sim! Limpeza, polimento e manutenção ✨ Quer trazer sua peça pra uma visita?\"\n\nRESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO."
+        }
+      },
+      "id": "46a48d70-bf20-47c8-b770-979e89eb34fa",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        6944,
+        2080
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<Chat_History>\n{{ $json.history }}\n</Chat_History>\n\n<Current_User_Input>\n{{ $('Get Message').item.json.message }}\n</Current_User_Input>",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=# SYSTEM ROLE\nYou are a \"Context Retrieval Processor\". You are a backend system, NOT a conversational assistant. You have NO personality.\n\n# INPUTS PROVIDED\n1. <CHAT_HISTORY>: Previous messages and structured file data (JSON, metadata, captions).\n2. <CURRENT_INPUT>: The latest message from the user.\n\n# CORE OBJECTIVE\nCompare the <CURRENT_INPUT> against the <CHAT_HISTORY>. Extract ONLY the factual information required to answer the current input.\n\n# PROCESSING RULES (Follow Strictly)\n\n1. **ANALYZE INTENT:** Read <CURRENT_INPUT>. Is the user asking a question, asking for a summary, or referencing a file?\n   - IF the input is just a greeting (e.g., \"Hola\", \"Hello\", \"Are you there?\") OR a generic compliment -> RETURN \"NO_CONTEXT\".\n   - IF the input requires information from the past -> PROCEED to Step 2.\n\n2. **DECODE STRUCTURED DATA:**\n   - Look for patterns like `File name:`, `Captions:`, and `Extracted data:`.\n   - **CRITICAL:** Connect the \"File name\" to its \"Extracted data\".\n   - *Example:* If history has \"File: invoice.pdf\" and \"Extracted: Total $50\", and user asks \"How much?\", you must extract: \"File invoice.pdf shows a total of $50\".\n\n3. **RESOLVE PRONOUNS:**\n   - If user asks \"What does **it** say?\" or \"Who is **he**?\", look in the <CHAT_HISTORY> to identify what \"it\" or \"he\" refers to. Extract that specific reference.\n\n4. **FILTERING:**\n   - Ignore polite conversation in history (e.g., \"Thank you\", \"Good morning\").\n   - Ignore metadata that is not requested (e.g., MIME types or raw variable names like `$json`) unless specifically asked for.\n\n# OUTPUT RULES\n- Output **ONLY** the facts.\n- Do NOT use conversational filler words (e.g., \"I found this...\", \"The context is...\").\n- Do NOT output markdown code blocks unless the extracted data is code.\n- If no relevant facts are found for the specific input -> RETURN \"NO_CONTEXT\".\n\n# FINAL RESPONSE\n(Output only the extracted facts or NO_CONTEXT)\n\n# ORIN JOIAS SPECIFIC RULES\n- ALWAYS extract and preserve: occasion (casamento, presente, formatura), piece type (anel, aliança, colar), material (ouro amarelo/branco/rosé), style, urgency, client name.\n- If user says \"já falei\", \"já disse\", \"já respondi\" — SEARCH chat history for that answer and INCLUDE it.\n- If user mentions a date (amanhã, segunda, hoje às 15h), extract: \"Requested date: [date]\"\n- If user mentioned casamento/wedding earlier, ALWAYS include \"Occasion: casamento\" in output.\n- Extract scheduling intent: did user agree to visit? What date/time/period?\n- NEVER output NO_CONTEXT if the user references something from the chat history — always search and find it."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "eb0d0e55-1d6d-41a3-bffd-2c5e3d2d31f3",
+      "name": "Context Refiner",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        6544,
+        2080
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=Chats_{{ $('Global Variables').item.json.number }}",
+        "messageData": "={{ $json.message_text.join('\\n') }}",
+        "tail": true
+      },
+      "id": "47a4fe06-7a45-44fe-92bc-79cda433b549",
+      "name": "Push to chat_history",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        5776,
+        2256
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=Chats_{{ $('Global Variables').item.json.number }}",
+        "messageData": "=.",
+        "tail": true
+      },
+      "id": "98c4bba6-775a-4d38-9c83-64b25bf83932",
+      "name": "Push first message to chat_history",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        5776,
+        2448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=Chats_{{  $('Global Variables').item.json.number }}",
+        "options": {}
+      },
+      "id": "525f488e-5066-4c84-bd08-0959fdb3c33c",
+      "name": "Get chat_history1",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        4752,
+        2128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=Chats_{{ $('Global Variables').item.json.number }}",
+        "messageData": "=User: {{ $('Get Message').item.json.message }}\nAgent: {{ $('Agent Response').item.json.reponse }}",
+        "tail": true
+      },
+      "id": "08497094-b7cd-4d03-8c0e-197360542870",
+      "name": "Push message chat_history (User And Agent)",
+      "type": "n8n-nodes-base.redis",
+      "position": [
+        7600,
+        2080
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chat_history",
+          "cachedResultName": "chat_history"
+        },
+        "columns": {
+          "value": {
+            "message_text": "=User: {{ $('Get Message').item.json.message }}\nAgent: {{ $('Agent Response').item.json.reponse }}",
+            "user_whatsapp_number": "={{ $('Global Variables').item.json.number }}"
+          },
+          "schema": [
+            {
+              "id": "message_id",
+              "type": "number",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "message_id",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_whatsapp_number",
+              "type": "string",
+              "display": true,
+              "required": true,
+              "displayName": "user_whatsapp_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_text",
+              "type": "string",
+              "display": true,
+              "required": true,
+              "displayName": "message_text",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_timestamp",
+              "type": "dateTime",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "message_timestamp",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "type": "dateTime",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "created_at",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "92b3ffab-fb04-4575-855a-cb1ab75adb57",
+      "name": "Add Messages to chat_history (User And Agent)",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        7808,
+        2080
+      ],
+      "typeVersion": 2.6
+    },
+    {
+      "id": "a23a94ca-0c81-48d5-bace-738af244c867",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        976,
+        912
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "6e538c6a-1865-4784-a565-dac1ab16545e",
+      "name": "Parallel Writing status",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        1072,
+        1536
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "444d3835-f5d1-43dd-a7d1-7b9a2ada6610",
+      "name": "OpenAI Chat Model (Agent)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        6944,
+        2272
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.6
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "jlKvv3f9f18hHyJx",
+          "name": "OpenAI API Key"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {},
+      "id": "eb8e098b-7c6b-4cde-bae9-fe4143122bb6",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1216,
+        1088
+      ],
+      "webhookId": "65187612-7e5b-4a76-8465-7bd694e3e172",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "18946671-190b-43d9-a88f-810184127ed2",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.message_text }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1920d4a8-78c2-41f1-8179-a912b43d38b9",
+      "name": "chat_history in DataBase?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        5568,
+        2352
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "content": "## 1. Database Setup\nCreates the `chat_history` table in PostgreSQL. Execute this node manually **once** before activating the workflow.",
+        "height": 320,
+        "width": 512,
+        "color": 7
+      },
+      "id": "3f6f770b-3b44-4675-b538-33ae53d39597",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Parallel UX Handling\nManages user experience (Read receipts, 'Typing...' status) in parallel using a sub-workflow to avoid adding latency to the main AI processing logic.",
+        "height": 688,
+        "width": 832,
+        "color": 7
+      },
+      "id": "4b6f4dff-5454-407f-be33-4bd779f0b381",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        608
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Webhook & Configuration\nReceives the Evolution API payload and defines global variables (Buffer wait time, Cache duration, History limit).",
+        "height": 752,
+        "width": 1440,
+        "color": 7
+      },
+      "id": "bd72d726-84ed-4434-95b7-173b24c82ca0",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        1344
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 4. Media Normalization\nDetects media types (Images, Audio, Documents) and downloads/converts them into a format compatible with the AI Agent.",
+        "height": 2400,
+        "width": 1840,
+        "color": 7
+      },
+      "id": "9e9ea3aa-852a-432c-bc26-ee13552f8dab",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        2160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 5. Smart Input Buffering\nUses Redis to:\n1. Group **Album files** into a single input.\n2. Debounce **Text messages** (waits X seconds) to prevent fragmented AI responses.",
+        "height": 1072,
+        "width": 2080,
+        "color": 7
+      },
+      "id": "3ddc5983-ec8a-496b-b21d-d02cac687e9b",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2496,
+        1760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 6. Hybrid Memory Retrieval\nOptimized fetch strategy: Checks Redis (fast cache) for recent history first. If empty, falls back to PostgreSQL (permanent storage).",
+        "height": 720,
+        "width": 1600,
+        "color": 7
+      },
+      "id": "4dc66b66-9a03-43a5-ad23-1dffd23659b8",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4688,
+        1952
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 7. Context Refinement & Generation\n1. **Refiner Agent:** Summarizes chat history to save tokens and reduce context rot.\n2. **Main Agent:** Generates the final response.\n3. **Sync:** Saves the interaction to both PostgreSQL and the Redis buffer.",
+        "height": 608,
+        "width": 1600,
+        "color": 7
+      },
+      "id": "163ace07-b710-43fb-a754-c5ed15556a83",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6416,
+        1936
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 8. Cache Lifecycle Manager\nKeeps the conversation active in Redis for a specific duration (e.g., 300s) after the last message to ensure high-speed retrieval.",
+        "height": 640,
+        "width": 1184,
+        "color": 7
+      },
+      "id": "fb24f4eb-c334-4aa1-b247-c8a72cf1d247",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        8096,
+        1936
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ Core Configuration\nControl the buffering and memory logic here:\n\n*   **wait_buffer**: The debounce window (in seconds). The workflow waits this long for subsequent text messages to group them into a single AI prompt.\n*   **wait_conversation**: Redis TTL (in seconds). How long the active conversation stays in the \"Hot Cache\" after the last message.\n*   **max_chat_history**: The hard limit of past messages to fetch from PostgreSQL (Cold Storage) when the cache is empty.",
+        "height": 464,
+        "width": 400,
+        "color": 3
+      },
+      "id": "52b4fc49-49bc-4fc3-a231-8377cd367344",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        1472
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## ORION WF Bot v7 — Lara SDR\n### Baseado no template #13407 adaptado para ORIN Joias\n\n**Stack:** OpenAI GPT-4o + Redis + PostgreSQL + UAZAPI\n\n### Fluxo:\n1. Webhook recebe msg UAZAPI\n2. Smart Buffer (Redis) espera cliente terminar de digitar\n3. Memória híbrida: Redis (hot) + PostgreSQL (cold)\n4. Context Refiner (GPT-4o-mini) resume histórico\n5. AI Agent (GPT-4o) gera resposta como Lara\n6. Envia via UAZAPI + salva no Redis/Postgres/CRM\n\n### Credenciais necessárias:\n- OpenAI API Key\n- Redis\n- PostgreSQL\n- UAZAPI Token (HTTP Header Auth)\n- CRM Webhook Key (HTTP Header Auth)",
+        "height": 1070,
+        "width": 388
+      },
+      "id": "99b522bd-49bf-4041-928c-91660c46c4cc",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 💡 Need Assistance?\n\nIf you’d like help customizing or extending this workflow, feel free to reach out:  \n\n📧 Email: [johnsilva11031@gmail.com](mailto:johnsilva11031@gmail.com)  \n🔗 LinkedIn: [John Alejandro Silva Rodríguez](https://www.linkedin.com/in/john-alejandro-silva-rodriguez-48093526b/)",
+        "height": 208,
+        "width": 368,
+        "color": 2
+      },
+      "id": "252dc60c-71df-49ae-bbb0-ed561843872a",
+      "name": "Sticky Note15",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1728,
+        1088
+      ],
+      "typeVersion": 1
+    },
+    {
+      "id": "crm-update-lead",
+      "name": "CRM: Atualizar Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        10448,
+        1700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/update-lead",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\\n  \"whatsapp_number\": \"+{{ $('Global Variables').item.json.number }}\",\\n  \"stage\": \"NOVO\"\\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Tcdgn0M6JbqsIVM0",
+          "name": "ORION API"
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "crm-new-msg",
+      "name": "CRM: Registrar Mensagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        10448,
+        1900
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/new-message",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\\n  \"channel\": \"whatsapp\",\\n  \"whatsapp_number\": \"+{{ $('Global Variables').item.json.number }}\",\\n  \"content\": \"{{ $('Get Message').item.json.message }}\",\\n  \"profile_name\": \"{{ $('Global Variables').item.json.profile_name }}\"\\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Tcdgn0M6JbqsIVM0",
+          "name": "ORION API"
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "crm-bot-reply",
+      "name": "CRM: Bot Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        10640,
+        1700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/bot-reply",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\\n  \"whatsapp_number\": \"+{{ $('Global Variables').item.json.number }}\",\\n  \"content\": \"{{ $('Agent Response').item.json.reponse }}\"\\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Tcdgn0M6JbqsIVM0",
+          "name": "ORION API"
+        }
+      },
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Writting...",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text?": {
+      "main": [
+        [
+          {
+            "node": "Normalize PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Album?": {
+      "main": [
+        [
+          {
+            "node": "Push Media to Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Push to Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Global Variables",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parallel Writing status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Agent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Normalize CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Completed?": {
+      "main": [
+        [
+          {
+            "node": "Delete Media Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Media Type": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from CSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTML Extract Generic1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from ICS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from ODS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Extract from RTF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get_error_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Message": {
+      "main": [
+        [
+          {
+            "node": "Get chat_history1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer Route": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait For User Other Fast Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get ODS data": {
+      "main": [
+        [
+          {
+            "node": "Normalize ODS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get RTF data": {
+      "main": [
+        [
+          {
+            "node": "Normalize RTF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Type": {
+      "main": [
+        [
+          {
+            "node": "get_message (text)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Push to Buffer (AlbumGroup)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Descargar Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open session": {
+      "main": [
+        []
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "get_message (Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze audio": {
+      "main": [
+        [
+          {
+            "node": "get_message (Audio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze video": {
+      "main": [
+        [
+          {
+            "node": "get_message (Video)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Buffer": {
+      "main": [
+        [
+          {
+            "node": "Normalize Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Mime Type": {
+      "main": [
+        [
+          {
+            "node": "Media Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get RTF data1": {
+      "main": [
+        [
+          {
+            "node": "Normalize XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize CSV": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize ICS": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize ODS": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize PDF": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize RTF": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize XML": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Messages": {
+      "main": [
+        []
+      ]
+    },
+    "Send Response": {
+      "main": [
+        [
+          {
+            "node": "Push message chat_history (User And Agent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize HTML": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize JSON": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize XLSX": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push to Buffer": {
+      "main": [
+        [
+          {
+            "node": "Get From Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context Refiner": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Get Mime Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Media": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get From Buffer": {
+      "main": [
+        [
+          {
+            "node": "Buffer Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize input": {
+      "main": [
+        [
+          {
+            "node": "Check AlbumGroup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Normalize PDF (AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check AlbumGroup": {
+      "main": [
+        [
+          {
+            "node": "Album?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from CSV": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from ICS": {
+      "main": [
+        [
+          {
+            "node": "Normalize ICS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from ODS": {
+      "main": [
+        [
+          {
+            "node": "Get ODS data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from PDF": {
+      "main": [
+        [
+          {
+            "node": "Text?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from RTF": {
+      "main": [
+        [
+          {
+            "node": "Get RTF data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XML": {
+      "main": [
+        [
+          {
+            "node": "Normalize XML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_history": {
+      "main": [
+        [
+          {
+            "node": "Context Refiner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Global Variables": {
+      "main": [
+        [
+          {
+            "node": "Message Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Buffer": {
+      "main": [
+        [
+          {
+            "node": "Get Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Normalize text file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from JSON": {
+      "main": [
+        [
+          {
+            "node": "Normalize JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XLSX": {
+      "main": [
+        [
+          {
+            "node": "Get RTF data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_history1": {
+      "main": [
+        [
+          {
+            "node": "chat_history In Buffer?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_error_message": {
+      "main": [
+        [
+          {
+            "node": "Normalize input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize PDF (AI)": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_message (text)": {
+      "main": [
+        [
+          {
+            "node": "Push to Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Media Buffer": {
+      "main": [
+        [
+          {
+            "node": "Normalize MediaGroup Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize text file": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_message (Audio)": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_message (Image)": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_message (Video)": {
+      "main": [
+        [
+          {
+            "node": "get_message (File message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Media to Buffer": {
+      "main": [
+        [
+          {
+            "node": "Get Album From Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push to chat_history": {
+      "main": [
+        [
+          {
+            "node": "Get chat_history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate all Messges": {
+      "main": [
+        [
+          {
+            "node": "chat_history in DataBase?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Album From Buffer": {
+      "main": [
+        [
+          {
+            "node": "Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Extract Generic1": {
+      "main": [
+        [
+          {
+            "node": "Normalize HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_history In Buffer?": {
+      "main": [
+        [
+          {
+            "node": "Get chat_history",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get chat_history From DataBase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_history in DataBase?": {
+      "main": [
+        [
+          {
+            "node": "Push to chat_history",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Push first message to chat_history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_message (File message)": {
+      "main": [
+        [
+          {
+            "node": "Normalize input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer (chat_history) Route": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Buffer (chat_history)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait For end of conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize MediaGroup Buffer": {
+      "main": [
+        [
+          {
+            "node": "Get Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Buffer (chat_history)": {
+      "main": [
+        [
+          {
+            "node": "Delete Buffer (chat_history)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For end of conversation": {
+      "main": [
+        [
+          {
+            "node": "Get From Buffer(chat_history)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get From Buffer(chat_history)": {
+      "main": [
+        [
+          {
+            "node": "Buffer (chat_history) Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push to Buffer (chat_history)": {
+      "main": [
+        [
+          {
+            "node": "Get From Buffer(chat_history)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_history From DataBase": {
+      "main": [
+        [
+          {
+            "node": "Aggregate all Messges",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For User Other Fast Message": {
+      "main": [
+        [
+          {
+            "node": "Get From Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Open session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Messages",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push first message to chat_history": {
+      "main": [
+        [
+          {
+            "node": "Get chat_history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Create Table chat_history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push message chat_history (User And Agent)": {
+      "main": [
+        [
+          {
+            "node": "Add Messages to chat_history (User And Agent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Messages to chat_history (User And Agent)": {
+      "main": [
+        [
+          {
+            "node": "Push to Buffer (chat_history)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CRM: Atualizar Lead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CRM: Registrar Mensagem",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CRM: Bot Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model (Refiner)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Context Refiner",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model (Agent)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "",
+  "meta": {
+    "templateId": "13407",
+    "instanceId": "1bef4ea2aebb46b2c616eb7651b17349ec7103ce77c602c7e26bccde7719ec8a"
+  },
+  "id": "DErXspzdkANbtkVp",
+  "tags": []
+}

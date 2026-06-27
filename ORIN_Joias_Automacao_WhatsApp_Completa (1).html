@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORIN Joias - Automação WhatsApp + IA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c2c2c;
+            background: #fafafa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f0f0f 0%, #2c2c2c 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #C8A97A;
+            font-weight: 300;
+        }
+
+        .header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .header .company {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #C8A97A;
+            margin: 30px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        /* Navigation */
+        .nav {
+            background: #C8A97A;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .nav-list a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-list a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Content */
+        .content {
+            background: white;
+            padding: 40px 0;
+        }
+
+        .section {
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #C8A97A;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 300;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            color: #C8A97A;
+            margin-bottom: 25px;
+            font-weight: 400;
+            border-bottom: 3px solid #C8A97A;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.6rem;
+            color: #4a4a4a;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            text-align: justify;
+        }
+
+        ul {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Diagram Container */
+        .diagram-container {
+            background: #f8f9fa;
+            padding: 40px 20px;
+            border-radius: 15px;
+            margin: 40px 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .diagram-container h3 {
+            margin-bottom: 30px;
+            color: #C8A97A;
+            font-size: 1.8rem;
+        }
+
+        /* SVG Diagram Styles */
+        .flow-diagram {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Problem/Solution Boxes */
+        .problem-box, .solution-box {
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .problem-box {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .solution-box {
+            background: linear-gradient(135deg, #51cf66, #40c057);
+            color: white;
+        }
+
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats-table th {
+            background: #C8A97A;
+            color: white;
+            padding: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .stats-table td {
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stats-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .improvement {
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        /* Three Columns Layout */
+        .three-columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .column-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-top: 5px solid #C8A97A;
+        }
+
+        .column-card h3 {
+            color: #C8A97A;
+            margin-bottom: 20px;
+        }
+
+        /* Implementation Timeline */
+        .timeline {
+            margin: 40px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+
+        .timeline-number {
+            background: #C8A97A;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            flex-grow: 1;
+        }
+
+        /* Conclusion */
+        .conclusion {
+            background: linear-gradient(135deg, #C8A97A, #d4b584);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            border-radius: 15px;
+            margin: 60px 0;
+        }
+
+        .conclusion h2 {
+            color: white;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header .company {
+                font-size: 2.8rem;
+            }
+            
+            .nav-list {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .nav {
+                display: none;
+            }
+            
+            .content {
+                padding: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>AUTOMAÇÃO INTELIGENTE</h1>
+            <h2>WhatsApp + Inteligência Artificial</h2>
+            <div class="company">ORIN JOIAS</div>
+            <p class="subtitle">Sistema de Qualificação Automática de Leads</p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="#introducao">Introdução</a></li>
+                <li><a href="#problema">O Problema</a></li>
+                <li><a href="#solucao">A Solução</a></li>
+                <li><a href="#fluxo">Fluxo Completo</a></li>
+                <li><a href="#beneficios">Benefícios</a></li>
+                <li><a href="#resultados">Resultados</a></li>
+                <li><a href="#implementacao">Implementação</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="content">
+        <div class="container">
+            
+            <!-- Introdução -->
+            <section id="introducao" class="section">
+                <h1>INTRODUÇÃO</h1>
+                <p>A ORIN Joias está prestes a revolucionar o atendimento ao cliente com uma solução de automação inteligente que combina WhatsApp e Inteligência Artificial.</p>
+                <p>Este sistema foi desenvolvido especificamente para o mercado de joias de luxo, onde cada cliente representa um investimento significativo e merece atendimento personalizado desde o primeiro contato.</p>
+                
+                <h3>Objetivos do Sistema</h3>
+                <ul>
+                    <li>Qualificar leads automaticamente antes do atendimento humano</li>
+                    <li>Otimizar o tempo da equipe de vendas focando apenas em leads qualificados</li>
+                    <li>Aumentar a taxa de conversão através de atendimento inteligente</li>
+                    <li>Proporcionar experiência personalizada para cada tipo de cliente</li>
+                </ul>
+            </section>
+
+            <!-- O Problema -->
+            <section id="problema" class="section">
+                <h1>O PROBLEMA ATUAL</h1>
+                
+                <div class="problem-box">
+                    <h3>Desafios do Atendimento Tradicional</h3>
+                    <p>No atendimento tradicional via WhatsApp, a equipe da ORIN Joias enfrenta diversos desafios que impactam diretamente a eficiência e os resultados.</p>
+                </div>
+
+                <h2>Desafios Identificados</h2>
+                <ul>
+                    <li><strong>Tempo perdido com leads não qualificados:</strong> Curiosos sem intenção real de compra consomem recursos preciosos</li>
+                    <li><strong>Atendimento reativo:</strong> Equipe sempre "correndo atrás" das mensagens sem estratégia</li>
+                    <li><strong>Inconsistência:</strong> Cada vendedor com abordagem diferente, sem padronização</li>
+                    <li><strong>Leads quentes perdidos:</strong> Demora no primeiro atendimento resulta em oportunidades perdidas</li>
+                    <li><strong>Coleta de dados ineficiente:</strong> Dificuldade em obter informações básicas de forma natural</li>
+                    <li><strong>Limitação de horário:</strong> Impossibilidade de atender 24h por dia, 7 dias por semana</li>
+                </ul>
+
+                <h2>Impacto nos Resultados</h2>
+                <div class="three-columns">
+                    <div class="column-card">
+                        <h3>⬇️ Baixa Conversão</h3>
+                        <p>Taxa de conversão entre 8-12% devido à falta de qualificação prévia</p>
+                    </div>
+                    <div class="column-card">
+                        <h3>😰 Equipe Sobrecarregada</h3>
+                        <p>Tempo excessivo gasto com leads que não convertem</p>
+                    </div>
+                    <div class="column-card">
+                        <h3>🕐 Oportunidades Perdidas</h3>
+                        <p>40-50% dos leads perdidos fora do horário comercial</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- A Solução -->
+            <section id="solucao" class="section">
+                <h1>A SOLUÇÃO: IA COMO SDR VIRTUAL</h1>
+                
+                <div class="solution-box">
+                    <h3>Inteligência Artificial Especializada em Joias de Luxo</h3>
+                    <p>O sistema utiliza IA para atuar como uma SDR (Sales Development Representative) virtual, qualificando leads de forma inteligente e direcionando apenas clientes com real potencial para a equipe humana.</p>
+                </div>
+
+                <h2>Como Funciona</h2>
+                <p>A IA da ORIN Joias é programada especificamente para o universo de joias de luxo. Ela:</p>
+                <ul>
+                    <li>Identifica se o cliente tem real intenção de compra ou é apenas curioso</li>
+                    <li>Classifica o tipo de interesse: joia pronta vs. personalizada</li>
+                    <li>Coleta dados essenciais de forma conversacional e natural</li>
+                    <li>Direciona cada tipo de cliente para o fluxo mais adequado</li>
+                    <li>Entrega leads qualificados com contexto completo para a equipe</li>
+                </ul>
+
+                <h2>Três Tipos de Cliente, Três Estratégias</h2>
+                <div class="three-columns">
+                    <div class="column-card">
+                        <h3>🤔 Cliente Curioso</h3>
+                        <p><strong>Perfil:</strong> Pessoa interessada em joias mas sem orçamento ou urgência real.</p>
+                        <p><strong>Estratégia:</strong> Direcionamento para catálogo online e Instagram para nutrição passiva de longo prazo.</p>
+                    </div>
+                    <div class="column-card">
+                        <h3>💍 Joia Pronta</h3>
+                        <p><strong>Perfil:</strong> Cliente com interesse em peças do catálogo existente.</p>
+                        <p><strong>Estratégia:</strong> Coleta de dados básicos + envio do catálogo para navegação independente.</p>
+                    </div>
+                    <div class="column-card">
+                        <h3>✨ Joia Personalizada</h3>
+                        <p><strong>Perfil:</strong> Cliente interessado em joia exclusiva, design personalizado.</p>
+                        <p><strong>Estratégia:</strong> Coleta completa + briefing detalhado + handoff imediato para closer especializado.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fluxo Completo -->
+            <section id="fluxo" class="section">
+                <h1>FLUXO COMPLETO DO SISTEMA</h1>
+                
+                <div class="diagram-container">
+                    <h3>Pipeline de Automação Inteligente</h3>
+                    <p style="margin-bottom: 20px;">Do primeiro contato via WhatsApp até a conversão final</p>
+                    
+                    <svg class="flow-diagram" width="680" height="1260" viewBox="0 0 680 1260" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M2 1L8 5L2 9" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </marker>
+                            <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="gradTeal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="gradCoral" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Etapa 1: Inbound -->
+                        <rect x="240" y="30" width="200" height="44" rx="8" fill="#6b7280" stroke="#4b5563"/>
+                        <text x="340" y="52" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">WhatsApp inbound</text>
+
+                        <line x1="340" y1="74" x2="340" y2="98" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Etapa 2: Buffer -->
+                        <rect x="200" y="98" width="280" height="44" rx="8" fill="url(#gradPurple)" stroke="#4f46e5"/>
+                        <text x="340" y="120" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Buffer mensagens picotadas</text>
+
+                        <line x1="340" y1="142" x2="340" y2="166" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Etapa 3: Tratamento -->
+                        <rect x="180" y="166" width="320" height="56" rx="8" fill="url(#gradTeal)" stroke="#0891b2"/>
+                        <text x="340" y="186" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Tratamento completo</text>
+                        <text x="340" y="204" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Texto + áudio STT + imagem vision + assembler</text>
+
+                        <line x1="340" y1="222" x2="340" y2="246" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Etapa 4: Verificação status -->
+                        <rect x="200" y="246" width="280" height="56" rx="8" fill="url(#gradPurple)" stroke="#4f46e5"/>
+                        <text x="340" y="266" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Status da conversa</text>
+                        <text x="340" y="284" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">BOT, aguardando humano ou em atendimento?</text>
+
+                        <!-- Saída: Em atendimento -->
+                        <line x1="480" y1="274" x2="520" y2="274" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <rect x="520" y="246" width="120" height="56" rx="8" fill="#6b7280" stroke="#4b5563"/>
+                        <text x="580" y="266" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Em atendimento</text>
+                        <text x="580" y="284" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">SDR no controle</text>
+
+                        <line x1="340" y1="302" x2="340" y2="326" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Etapa 5: Sondagem inicial -->
+                        <rect x="190" y="326" width="300" height="56" rx="8" fill="url(#gradTeal)" stroke="#0891b2"/>
+                        <text x="340" y="346" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">IA: Sondagem inicial</text>
+                        <text x="340" y="364" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Cliente real vs curioso? Urgência?</text>
+
+                        <line x1="340" y1="382" x2="340" y2="406" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Etapa 6: Classificação -->
+                        <rect x="160" y="406" width="360" height="56" rx="8" fill="url(#gradPurple)" stroke="#4f46e5"/>
+                        <text x="340" y="426" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">IA: Classificação do produto</text>
+                        <text x="340" y="444" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Joia pronta, personalizada ou só curiosidade?</text>
+
+                        <!-- Divisão dos fluxos -->
+                        <line x1="260" y1="462" x2="150" y2="500" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="340" y1="462" x2="340" y2="500" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="420" y1="462" x2="530" y2="500" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Fluxo 1: Curioso -->
+                        <rect x="50" y="500" width="130" height="56" rx="8" fill="#6b7280" stroke="#4b5563"/>
+                        <text x="115" y="520" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Curioso</text>
+                        <text x="115" y="538" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Sem dados</text>
+
+                        <!-- Seta do curioso -->
+                        <line x1="115" y1="556" x2="115" y2="580" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Fluxo curioso: Catálogo + Instagram -->
+                        <rect x="30" y="580" width="170" height="56" rx="8" fill="#6b7280" stroke="#4b5563"/>
+                        <text x="115" y="600" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Catálogo + Instagram</text>
+                        <text x="115" y="618" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Self-service + nutrição</text>
+
+                        <!-- Seta para nutrição passiva -->
+                        <line x1="115" y1="636" x2="115" y2="660" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Resultado curioso: Nutrição passiva -->
+                        <rect x="30" y="660" width="170" height="56" rx="8" fill="#6b7280" stroke="#4b5563"/>
+                        <text x="115" y="680" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Nutrição passiva</text>
+                        <text x="115" y="698" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Stories, coleções, conteúdo</text>
+
+                        <!-- Fluxo 2: Joia pronta -->
+                        <rect x="260" y="500" width="160" height="56" rx="8" fill="url(#gradBlue)" stroke="#1d4ed8"/>
+                        <text x="340" y="520" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Joia pronta</text>
+                        <text x="340" y="538" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Catálogo existente</text>
+
+                        <!-- Fluxo 3: Personalizada -->
+                        <rect x="460" y="500" width="150" height="56" rx="8" fill="url(#gradCoral)" stroke="#ea580c"/>
+                        <text x="535" y="520" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Personalizada</text>
+                        <text x="535" y="538" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Design exclusivo</text>
+
+                        <line x1="340" y1="556" x2="340" y2="580" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="535" y1="556" x2="535" y2="580" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Coleta dados -->
+                        <rect x="220" y="580" width="240" height="56" rx="8" fill="url(#gradBlue)" stroke="#1d4ed8"/>
+                        <text x="340" y="600" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Coleta dados mínimos</text>
+                        <text x="340" y="618" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Nome + WhatsApp + Instagram</text>
+
+                        <rect x="460" y="580" width="180" height="56" rx="8" fill="url(#gradCoral)" stroke="#ea580c"/>
+                        <text x="550" y="600" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Coleta completa</text>
+                        <text x="550" y="618" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Perfil + briefing</text>
+
+                        <line x1="340" y1="636" x2="340" y2="720" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="550" y1="636" x2="550" y2="720" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Sistema -->
+                        <rect x="220" y="720" width="240" height="56" rx="8" fill="url(#gradGreen)" stroke="#16a34a"/>
+                        <text x="340" y="740" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Sistema: Lead básico</text>
+                        <text x="340" y="758" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Ficha com dados mínimos</text>
+
+                        <rect x="460" y="720" width="180" height="56" rx="8" fill="url(#gradGreen)" stroke="#16a34a"/>
+                        <text x="550" y="740" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Sistema: Lead rico</text>
+                        <text x="550" y="758" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Ficha completa</text>
+
+                        <line x1="340" y1="776" x2="340" y2="800" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="550" y1="776" x2="480" y2="800" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Ação -->
+                        <rect x="220" y="800" width="240" height="56" rx="8" fill="url(#gradBlue)" stroke="#1d4ed8"/>
+                        <text x="340" y="820" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Envia link catálogo</text>
+                        <text x="340" y="838" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Self-service</text>
+
+                        <rect x="460" y="800" width="180" height="56" rx="8" fill="url(#gradCoral)" stroke="#ea580c"/>
+                        <text x="550" y="820" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Handoff pra closer</text>
+                        <text x="550" y="838" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Atendimento VIP</text>
+
+                        <line x1="340" y1="856" x2="340" y2="900" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+                        <line x1="550" y1="856" x2="550" y2="900" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Resultados -->
+                        <rect x="220" y="900" width="240" height="70" rx="8" fill="url(#gradBlue)" stroke="#1d4ed8"/>
+                        <text x="340" y="920" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Lead frio/morno</text>
+                        <text x="340" y="938" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Browsing independente</text>
+                        <text x="340" y="956" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Follow-up automático</text>
+
+                        <rect x="460" y="900" width="180" height="70" rx="8" fill="url(#gradCoral)" stroke="#ea580c"/>
+                        <text x="550" y="920" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Lead quente</text>
+                        <text x="550" y="938" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Closer atende</text>
+                        <text x="550" y="956" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Proposta custom</text>
+
+                        <!-- Conversão de frio para morno -->
+                        <path d="M340 970 L340 1010 L400 1010 L400 1050" fill="none" stroke="#666" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+                        <text x="380" y="985" text-anchor="start" fill="#666" font-family="Arial" font-size="10">Se demonstrar interesse</text>
+
+                        <!-- Possibilidade de curioso esquentar -->
+                        <path d="M115 716 L115 1030 L310 1030 L310 1050" fill="none" stroke="#666" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+                        <text x="140" y="880" text-anchor="start" fill="#666" font-family="Arial" font-size="10">Se esquentar</text>
+
+                        <rect x="310" y="1050" width="180" height="56" rx="8" fill="url(#gradAmber)" stroke="#d97706"/>
+                        <text x="400" y="1070" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Lead esquentou</text>
+                        <text x="400" y="1088" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">SDR reaborda em 24h</text>
+
+                        <line x1="400" y1="1106" x2="400" y2="1140" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+                        <!-- Conversão final -->
+                        <rect x="280" y="1140" width="240" height="56" rx="8" fill="url(#gradGreen)" stroke="#16a34a"/>
+                        <text x="400" y="1160" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="12" font-weight="bold">Cliente convertido</text>
+                        <text x="400" y="1178" text-anchor="middle" dominant-baseline="central" fill="white" font-family="Arial" font-size="10">Pedido + Proposta + Pagamento</text>
+
+                        <!-- Labels laterais -->
+                        <text x="20" y="380" text-anchor="start" fill="#666" font-family="Arial" font-size="10">IA Qualificação</text>
+                        <text x="20" y="740" text-anchor="start" fill="#666" font-family="Arial" font-size="10">Sistema</text>
+                        <text x="20" y="930" text-anchor="start" fill="#666" font-family="Arial" font-size="10">Humano</text>
+                    </svg>
+                </div>
+
+                <h2>Detalhamento das Etapas</h2>
+                
+                <h3>1. Recebimento e Processamento Inteligente</h3>
+                <p><strong>Buffer de Mensagens:</strong> O sistema identifica que muitos clientes enviam mensagens "picotadas" e aguarda 4 segundos de silêncio para consolidar o contexto completo.</p>
+                <p><strong>Tratamento Multimodal:</strong> Processa texto, áudio (transcrição), imagens (análise visual) e documentos automaticamente.</p>
+
+                <h3>2. Qualificação por IA</h3>
+                <p><strong>Sondagem Estratégica:</strong> Perguntas inteligentes para identificar rapidamente o perfil: "Você já tem uma ideia do que procura?", "É algo personalizado ou do catálogo?"</p>
+                <p><strong>Classificação Automática:</strong> Baseada nas respostas, categoriza em curioso, joia pronta ou personalizada.</p>
+
+                <h3>3. Coleta Otimizada de Dados</h3>
+                <p><strong>Joias Prontas:</strong> Apenas nome, WhatsApp e Instagram para não "assustar" o cliente.</p>
+                <p><strong>Joias Personalizadas:</strong> Briefing completo incluindo tipo, material, ocasião, prazo e orçamento.</p>
+            </section>
+
+            <!-- Benefícios -->
+            <section id="beneficios" class="section">
+                <h1>BENEFÍCIOS PARA A ORIN JOIAS</h1>
+
+                <div class="three-columns">
+                    <div class="column-card">
+                        <h3>🚀 Eficiência Operacional</h3>
+                        <ul>
+                            <li>70% de redução no tempo com leads não qualificados</li>
+                            <li>Atendimento 24/7 para primeiras interações</li>
+                            <li>Padronização do atendimento</li>
+                            <li>Equipe focada apenas em leads quentes</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="column-card">
+                        <h3>💰 Aumento das Vendas</h3>
+                        <ul>
+                            <li>Maior taxa de conversão com qualificação prévia</li>
+                            <li>Tempo de fechamento reduzido</li>
+                            <li>Vendas fora do horário comercial</li>
+                            <li>Follow-up automático inteligente</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="column-card">
+                        <h3>😊 Experiência do Cliente</h3>
+                        <ul>
+                            <li>Resposta imediata 24/7</li>
+                            <li>Atendimento personalizado por perfil</li>
+                            <li>Cliente não repete informações</li>
+                            <li>Direcionamento inteligente</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Inteligência de Negócio</h2>
+                <ul>
+                    <li><strong>Relatórios detalhados</strong> sobre perfil e comportamento dos leads</li>
+                    <li><strong>Análise de padrões</strong> para otimização contínua do processo</li>
+                    <li><strong>Métricas de performance</strong> da equipe de vendas e conversão</li>
+                    <li><strong>Insights sobre preferências</strong> dos clientes para estratégia de produto</li>
+                </ul>
+            </section>
+
+            <!-- Resultados Esperados -->
+            <section id="resultados" class="section">
+                <h1>RESULTADOS ESPERADOS</h1>
+                
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Antes</th>
+                            <th>Depois</th>
+                            <th>Melhoria</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Taxa de Conversão</strong></td>
+                            <td>8-12%</td>
+                            <td class="improvement">20-30%</td>
+                            <td class="improvement">+150%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tempo de Qualificação</strong></td>
+                            <td>15-20 min</td>
+                            <td class="improvement">2-3 min</td>
+                            <td class="improvement">-85%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Leads Perdidos (fora horário)</strong></td>
+                            <td>40-50%</td>
+                            <td class="improvement">5-10%</td>
+                            <td class="improvement">-80%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tempo até Primeira Resposta</strong></td>
+                            <td>2-4 horas</td>
+                            <td class="improvement">Instantâneo</td>
+                            <td class="improvement">-100%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Produtividade da Equipe</strong></td>
+                            <td>100%</td>
+                            <td class="improvement">300%</td>
+                            <td class="improvement">+200%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin: 30px 0; text-align: center;">
+                    <h3 style="color: #C8A97A; margin-bottom: 15px;">💡 Projeção de ROI</h3>
+                    <p style="font-size: 1.2rem;">Com base na melhoria das métricas acima, estimamos um <strong>retorno do investimento de 300-500%</strong> no primeiro ano de operação.</p>
+                </div>
+            </section>
+
+            <!-- Implementação -->
+            <section id="implementacao" class="section">
+                <h1>PLANO DE IMPLEMENTAÇÃO</h1>
+                
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-number">1</div>
+                        <div class="timeline-content">
+                            <h3>Fase 1: Configuração Inicial (Semana 1-2)</h3>
+                            <ul>
+                                <li>Configuração da infraestrutura de IA</li>
+                                <li>Integração com WhatsApp Business da ORIN Joias</li>
+                                <li>Treinamento da IA com dados específicos do negócio</li>
+                                <li>Configuração do sistema de gestão de leads</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">2</div>
+                        <div class="timeline-content">
+                            <h3>Fase 2: Testes e Ajustes (Semana 3-4)</h3>
+                            <ul>
+                                <li>Testes com volume reduzido de leads reais</li>
+                                <li>Ajuste fino dos algoritmos de classificação</li>
+                                <li>Treinamento da equipe para trabalhar com leads qualificados</li>
+                                <li>Definição de scripts e fluxos específicos da ORIN</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">3</div>
+                        <div class="timeline-content">
+                            <h3>Fase 3: Lançamento Completo (Semana 5)</h3>
+                            <ul>
+                                <li>Ativação total do sistema</li>
+                                <li>Monitoramento ativo das primeiras semanas</li>
+                                <li>Ajustes baseados em dados reais de operação</li>
+                                <li>Implementação de relatórios e dashboards</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">4</div>
+                        <div class="timeline-content">
+                            <h3>Fase 4: Otimização Contínua (Ongoing)</h3>
+                            <ul>
+                                <li>Análise mensal de performance</li>
+                                <li>Refinamento dos algoritmos baseado em resultados</li>
+                                <li>Expansão de funcionalidades conforme necessidade</li>
+                                <li>Treinamento contínuo da equipe</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusão -->
+            <section class="conclusion">
+                <h2>A ORIN JOIAS ESTÁ PRONTA PARA O FUTURO</h2>
+                <p>A automação inteligente proposta representa uma evolução natural do atendimento ao cliente no mercado de luxo. Ao combinar a eficiência da Inteligência Artificial com o toque humano especializado, criamos um sistema que:</p>
+                <br>
+                <p>✨ <strong>Respeita o tempo</strong> tanto dos clientes quanto da equipe</p>
+                <p>🎯 <strong>Oferece experiências personalizadas</strong> para cada perfil de cliente</p>
+                <p>📈 <strong>Aumenta significativamente</strong> a taxa de conversão</p>
+                <p>🚀 <strong>Posiciona a ORIN Joias</strong> como pioneira em inovação no setor</p>
+                <br>
+                <p style="font-size: 1.3rem; font-weight: 600;">Este sistema não apenas resolve os problemas atuais, mas prepara a ORIN Joias para o futuro do varejo de luxo, onde a personalização inteligente será um diferencial competitivo essencial.</p>
+                <br>
+                <p style="font-size: 1.5rem; font-weight: 700;">O futuro do luxury retail começa agora. 💎</p>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Print button functionality
+        function printDocument() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

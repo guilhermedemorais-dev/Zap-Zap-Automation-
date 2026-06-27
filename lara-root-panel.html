@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lara ROOT Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101113;
+      --panel: #18191d;
+      --panel-2: #202228;
+      --panel-3: #121317;
+      --text: #f2eee8;
+      --muted: #a29b93;
+      --soft: #d9c8ad;
+      --line: rgba(255,255,255,.1);
+      --line-strong: rgba(217,200,173,.42);
+      --gold: #c8a97a;
+      --gold-2: #f0d7a6;
+      --green: #28c76f;
+      --blue: #6aa8ff;
+      --red: #ef6464;
+      --input: #0d0e11;
+      --whats: #1f7a50;
+      --shadow: 0 18px 60px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(200,169,122,.08), transparent 34%),
+        linear-gradient(180deg, #111216 0%, var(--bg) 42%, #0d0e10 100%);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      background: rgba(17,18,22,.94);
+      padding: 16px 22px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+    }
+    .top {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      color: var(--gold-2);
+    }
+    .subtitle {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    main {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 18px 22px 28px;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) 380px;
+      gap: 14px;
+      min-height: calc(100vh - 78px);
+    }
+    .card {
+      background: rgba(24,25,29,.96);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      margin: 0;
+      padding: 13px 14px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      border-bottom: 1px solid var(--line);
+      color: var(--gold);
+    }
+    .body { padding: 14px; }
+    .stack { display: grid; gap: 10px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--input);
+      color: var(--text);
+      padding: 10px 11px;
+      font-size: 13px;
+      outline: none;
+    }
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(200,169,122,.85);
+    }
+    .field { margin-bottom: 10px; }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tab, button, a.button {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 9px 11px;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 36px;
+    }
+    .tab.active {
+      border-color: var(--gold);
+      color: var(--gold-2);
+      background: rgba(200,169,122,.12);
+    }
+    button.primary, a.primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #14110c;
+      font-weight: 750;
+    }
+    button.good { color: var(--green); }
+    button.danger { color: var(--red); }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(40,199,111,.12);
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 8px 0 0;
+    }
+    .block-list {
+      display: grid;
+      gap: 8px;
+    }
+    .block {
+      border: 1px solid var(--line);
+      background: var(--panel-3);
+      border-radius: 7px;
+      padding: 10px;
+      cursor: pointer;
+      display: grid;
+      gap: 4px;
+    }
+    .block:hover, .block.active {
+      border-color: var(--line-strong);
+      background: rgba(200,169,122,.09);
+    }
+    .block strong {
+      font-size: 13px;
+      color: var(--text);
+    }
+    .block span {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .block small {
+      color: var(--gold);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .map-shell {
+      display: grid;
+      grid-template-rows: auto minmax(410px, 1fr) auto;
+      gap: 12px;
+      min-height: 100%;
+    }
+    .map-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .status-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .status {
+      border: 1px solid var(--line);
+      background: var(--panel-3);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+    .status strong {
+      color: var(--text);
+      margin-right: 4px;
+    }
+    .context-map {
+      position: relative;
+      min-height: 410px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        #101116;
+      background-size: 34px 34px;
+      overflow: hidden;
+    }
+    .context-map svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .edge {
+      stroke: rgba(200,169,122,.36);
+      stroke-width: 2;
+      fill: none;
+    }
+    .map-node {
+      position: absolute;
+      width: 142px;
+      min-height: 72px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 8px;
+      background: rgba(24,25,29,.96);
+      color: var(--text);
+      padding: 10px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      text-align: left;
+      box-shadow: 0 12px 28px rgba(0,0,0,.26);
+    }
+    .map-node strong {
+      font-size: 12px;
+      color: var(--text);
+    }
+    .map-node span {
+      font-size: 10px;
+      line-height: 1.25;
+      color: var(--muted);
+    }
+    .map-node.center {
+      width: 156px;
+      min-height: 86px;
+      border-color: var(--gold);
+      background: linear-gradient(180deg, rgba(200,169,122,.22), rgba(24,25,29,.96));
+    }
+    .map-node.active {
+      border-color: var(--gold-2);
+      outline: 3px solid rgba(200,169,122,.18);
+    }
+    .map-node.problem { border-color: rgba(239,100,100,.42); }
+    .map-node.action { border-color: rgba(40,199,111,.42); }
+    .map-node.context { border-color: rgba(106,168,255,.42); }
+    .node-detail {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, .7fr);
+      gap: 12px;
+    }
+    .mini-panel {
+      border: 1px solid var(--line);
+      background: var(--panel-3);
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .mini-panel h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--soft);
+    }
+    .mini-panel p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .chat {
+      display: grid;
+      gap: 8px;
+    }
+    .bubble {
+      max-width: 92%;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      background: #25262b;
+      color: #f5f1ea;
+    }
+    .bubble.user {
+      justify-self: end;
+      background: var(--whats);
+    }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      min-height: 210px;
+      background: #0b0c0f;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      color: #e8e2d8;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .preview-card {
+      position: sticky;
+      top: 92px;
+      align-self: start;
+    }
+    .legacy-panel {
+      display: none;
+    }
+    .legacy-panel.active {
+      display: block;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: end;
+    }
+    .row .field { flex: 1; margin-bottom: 0; }
+    @media (max-width: 1160px) {
+      main {
+        grid-template-columns: 240px minmax(0, 1fr);
+      }
+      .preview-card {
+        grid-column: 1 / -1;
+        position: static;
+      }
+    }
+    @media (max-width: 860px) {
+      header { position: static; }
+      main { grid-template-columns: 1fr; padding: 14px; }
+      .top { align-items: flex-start; flex-direction: column; }
+      .header-actions { justify-content: flex-start; }
+      .tabs { grid-template-columns: repeat(2, 1fr); }
+      .grid, .node-detail { grid-template-columns: 1fr; }
+      .context-map { min-height: 620px; }
+      .map-node { width: 132px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top">
+      <div>
+        <h1>Lara ROOT Studio</h1>
+        <p class="subtitle">Mapa de contexto, comandos ROOT e simulacao de atendimento em um painel local.</p>
+      </div>
+      <div class="header-actions">
+        <span class="pill"><span class="dot"></span>Local, sem token n8n</span>
+        <span class="pill">ROOT WhatsApp: <strong>+55 47 9696-3593</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <aside class="card">
+      <h2>Biblioteca</h2>
+      <div class="body">
+        <div class="block-list" id="blockList"></div>
+        <p class="hint">Clique em um bloco para editar a regra e gerar o comando ROOT. A ideia e configurar a Lara por areas, nao por texto solto.</p>
+      </div>
+    </aside>
+
+    <section class="card">
+      <h2>Mapa de Contexto</h2>
+      <div class="body map-shell">
+        <div class="map-toolbar">
+          <div class="status-strip">
+            <span class="status"><strong>Centro</strong>Lara</span>
+            <span class="status"><strong>Entrada</strong>cliente</span>
+            <span class="status"><strong>Saida</strong>agenda + contexto</span>
+          </div>
+          <div class="tabs" style="width:min(420px,100%); margin:0;">
+            <button class="tab active" data-mode="studio">Mapa</button>
+            <button class="tab" data-mode="quick">Rapido</button>
+            <button class="tab" data-mode="examples">Exemplos</button>
+            <button class="tab" data-mode="advanced">Avancado</button>
+          </div>
+        </div>
+
+        <div id="studioMode">
+          <div class="context-map" id="contextMap">
+            <svg id="edges" viewBox="0 0 1000 520" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="node-detail" style="margin-top:12px;">
+            <div class="mini-panel">
+              <h3 id="nodeTitle">Agendamento</h3>
+              <p id="nodeDescription">A Lara precisa confirmar data e horario, mas antes deve entender o motivo real da visita para o atendente receber contexto util.</p>
+            </div>
+            <div class="mini-panel chat" id="chatPreview"></div>
+          </div>
+        </div>
+
+        <div id="quickMode" class="legacy-panel">
+          <div class="field">
+            <label>Objetivo operacional</label>
+            <textarea id="quickObjective">Conduzir o cliente com naturalidade, entender o motivo do atendimento antes de agendar e registrar no agendamento o que ele quer ver.</textarea>
+          </div>
+          <div class="field">
+            <label>Regra principal</label>
+            <textarea id="quickRule">Antes de concluir um agendamento, colete nome completo, data, horario e motivo real da visita. Motivo generico como "visita a loja" nao basta.</textarea>
+          </div>
+          <div class="field">
+            <label>Regra de escrita</label>
+            <textarea id="quickWriting">Separe frases em baloes diferentes quando terminar com ponto, interrogacao ou exclamacao. Mantenha no mesmo balao listas de horarios, endereco, links e instrucoes conectadas.</textarea>
+          </div>
+          <div class="actions">
+            <button class="primary" id="buildQuick">Gerar pacote ROOT</button>
+          </div>
+        </div>
+
+        <div id="examplesMode" class="legacy-panel">
+          <div class="field">
+            <label>Entrada do cliente</label>
+            <textarea id="exampleInput">Gostaria de agendar uma visita</textarea>
+          </div>
+          <div class="field">
+            <label>Resposta ideal da Lara</label>
+            <textarea id="exampleOutput">Claro. Antes de olhar os horarios, me conta o que voce quer ver na visita: aliancas, anel, peca personalizada ou manutencao?</textarea>
+          </div>
+          <div class="actions">
+            <button class="primary" id="buildExample">Gerar exemplo ROOT</button>
+          </div>
+          <p class="hint">Use exemplos para ensinar tom e comportamento sem trocar o prompt base.</p>
+        </div>
+
+        <div id="advancedMode" class="legacy-panel">
+          <div class="row">
+            <div class="field">
+              <label>Nome do link</label>
+              <input id="linkName" value="Instagram">
+            </div>
+            <div class="field">
+              <label>URL</label>
+              <input id="linkUrl" value="https://www.instagram.com/orinjoias/">
+            </div>
+          </div>
+          <div class="field">
+            <label>Descricao do link</label>
+            <input id="linkDesc" value="perfil oficial da ORIN Joias">
+          </div>
+          <div class="field">
+            <label>Prompt completo via /newprompt</label>
+            <textarea id="newPrompt" placeholder="Use com cuidado. Para ajustes normais prefira regras, escrita e exemplos."></textarea>
+          </div>
+          <div class="actions">
+            <button id="buildLink">Gerar /link</button>
+            <button class="danger" id="buildNewPrompt">Gerar /newprompt</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card preview-card">
+      <h2>Editor ROOT</h2>
+      <div class="body">
+        <div class="field">
+          <label>Bloco selecionado</label>
+          <input id="selectedName" readonly>
+        </div>
+        <div class="grid">
+          <div class="field">
+            <label>Comando</label>
+            <select id="commandType">
+              <option value="regra">/regra</option>
+              <option value="escrita">/escrita</option>
+              <option value="exemplo">/exemplo</option>
+              <option value="objetivo">/objetivo</option>
+              <option value="persona">/persona</option>
+              <option value="corrigir">/corrigir</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Criticidade</label>
+            <select id="priority">
+              <option>Alta</option>
+              <option>Media</option>
+              <option>Baixa</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Texto que vai para o ROOT</label>
+          <textarea id="nodeText"></textarea>
+        </div>
+        <div class="actions">
+          <button class="primary" id="buildNode">Gerar comando</button>
+          <button id="buildNodeExample">Gerar exemplo</button>
+        </div>
+        <pre id="preview">root</pre>
+        <div class="actions">
+          <button class="good" id="copy">Copiar</button>
+          <a class="button primary" id="openWhats" href="#" target="_blank" rel="noreferrer">Abrir WhatsApp</a>
+          <button id="rootStart">Comando root</button>
+          <button id="rootStatus">/status</button>
+        </div>
+        <p class="hint">Fluxo recomendado: envie <strong>root</strong>, depois o comando gerado. Se o ROOT pedir confirmacao, responda <strong>sim</strong>.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const ROOT_NUMBER = '554796963593';
+    const preview = document.getElementById('preview');
+    const openWhats = document.getElementById('openWhats');
+    const blockList = document.getElementById('blockList');
+    const contextMap = document.getElementById('contextMap');
+    const edges = document.getElementById('edges');
+    const selectedName = document.getElementById('selectedName');
+    const commandType = document.getElementById('commandType');
+    const nodeText = document.getElementById('nodeText');
+    const nodeTitle = document.getElementById('nodeTitle');
+    const nodeDescription = document.getElementById('nodeDescription');
+    const chatPreview = document.getElementById('chatPreview');
+
+    const nodes = [
+      {
+        id: 'lara',
+        name: 'Lara',
+        group: 'nucleo',
+        x: 43,
+        y: 39,
+        kind: 'center',
+        command: 'persona',
+        description: 'Nucleo da assistente. Ela deve guiar o cliente com clareza, sem virar robo de menu.',
+        text: 'A Lara e uma assistente consultiva da ORIN Joias. Ela conversa de forma natural, conduz o atendimento e coleta contexto util antes de passar para o atendente.',
+        exampleIn: 'Ola',
+        exampleOut: 'Ola, tudo bem? Me conta rapidinho o que voce esta procurando hoje.'
+      },
+      {
+        id: 'greeting',
+        name: 'Saudacao',
+        group: 'entrada',
+        x: 8,
+        y: 10,
+        kind: 'context',
+        command: 'escrita',
+        description: 'Primeira impressao. Precisa ser curta, clara e nao despejar catalogo, ocasiao, nome e agenda no mesmo balao.',
+        text: 'Na saudacao inicial, use no maximo dois baloes curtos. Nao misture apresentacao, pedido de nome e menu de opcoes no mesmo balao.',
+        exampleIn: 'Ola',
+        exampleOut: 'Ola, tudo bem? Sou a Lara, assistente da ORIN Joias. Me conta o que voce procura hoje.'
+      },
+      {
+        id: 'writing',
+        name: 'Baloes',
+        group: 'forma',
+        x: 34,
+        y: 8,
+        kind: 'context',
+        command: 'escrita',
+        description: 'Regra de quebra de mensagens para o WhatsApp parecer humano e legivel.',
+        text: 'Separe frases em baloes diferentes quando terminar com ponto, interrogacao ou exclamacao. Mantenha no mesmo balao listas de horarios, endereco, links e instrucoes conectadas.',
+        exampleIn: 'Quero ver aliancas',
+        exampleOut: 'Perfeito. Voce procura aliancas para casamento ou compromisso?'
+      },
+      {
+        id: 'qualification',
+        name: 'Qualificacao',
+        group: 'contexto',
+        x: 66,
+        y: 10,
+        kind: 'context',
+        command: 'regra',
+        description: 'Extrai o motivo real do cliente para o atendente entrar na conversa sem perguntar tudo de novo.',
+        text: 'Durante o atendimento, extraia e preserve nas observacoes: peca de interesse, ocasiao, material, pedra, prazo, faixa de preco quando surgir e referencias mencionadas pelo cliente.',
+        exampleIn: 'Quero um anel para pedido',
+        exampleOut: 'Entendi. Voce ja tem alguma referencia de modelo, pedra ou faixa de valor em mente?'
+      },
+      {
+        id: 'catalog',
+        name: 'Catalogo',
+        group: 'conteudo',
+        x: 82,
+        y: 34,
+        kind: 'action',
+        command: 'regra',
+        description: 'Ajuda a Lara a oferecer catalogo sem empurrar link cedo demais.',
+        text: 'Quando o cliente pedir catalogo, ofereca o caminho mais util para o objetivo dele. Se ainda nao souber a peca de interesse, pergunte antes de enviar link generico.',
+        exampleIn: 'Tem catalogo?',
+        exampleOut: 'Tenho sim. Para te mandar algo certeiro, voce procura aliancas, aneis, colares ou uma peca personalizada?'
+      },
+      {
+        id: 'booking',
+        name: 'Agendamento',
+        group: 'acao',
+        x: 66,
+        y: 68,
+        kind: 'action',
+        command: 'regra',
+        description: 'Antes de criar agenda, precisa ter nome, data, horario e motivo util. Isso evita lead mudo no CRM.',
+        text: 'Antes de concluir agendamento, colete nome completo, data, horario e motivo real da visita. Motivo generico como "visita a loja" nao basta.',
+        exampleIn: 'Pode ser as 10',
+        exampleOut: 'Perfeito. Antes de registrar, me conta o que voce quer ver na visita: aliancas, anel, peca personalizada ou manutencao?'
+      },
+      {
+        id: 'crm',
+        name: 'CRM/Agenda',
+        group: 'saida',
+        x: 39,
+        y: 75,
+        kind: 'action',
+        command: 'regra',
+        description: 'O lead entra na agenda primeiro. O CRM decide pipeline de atendimento depois.',
+        text: 'Ao finalizar agendamento, registre nas observacoes o motivo do cliente e nao prometa pipeline. O fluxo correto e agenda primeiro, depois o CRM encaminha para atendimento.',
+        exampleIn: 'Meu nome e Guilherme, quero ver aliancas',
+        exampleOut: 'Combinado, Guilherme. Vou registrar sua visita com essa observacao para o atendimento ja te receber no contexto certo.'
+      },
+      {
+        id: 'handoff',
+        name: 'Handoff',
+        group: 'saida',
+        x: 11,
+        y: 68,
+        kind: 'action',
+        command: 'regra',
+        description: 'Quando passar para humano, a Lara deve resumir contexto e nao sumir sem fechamento.',
+        text: 'Quando encaminhar para atendimento humano, faca um resumo curto com nome, interesse, contexto, urgencia e proximo passo combinado.',
+        exampleIn: 'Quero falar com atendente',
+        exampleOut: 'Claro. Vou chamar o atendimento e deixar o contexto: voce quer falar sobre uma peca personalizada.'
+      },
+      {
+        id: 'inactive',
+        name: 'Inatividade',
+        group: 'recuperacao',
+        x: 8,
+        y: 36,
+        kind: 'problem',
+        command: 'regra',
+        description: 'Evita conversa abandonada. Retoma uma vez, depois encerra com canal aberto.',
+        text: 'Se o cliente ficar sem responder depois de uma pergunta importante, retome com uma mensagem curta perguntando se ainda quer continuar. Depois de nova falta de resposta, encerre com elegancia e deixe o canal aberto.',
+        exampleIn: 'cliente ficou sem responder',
+        exampleOut: 'Passando so para saber se voce ainda quer seguir com o atendimento. Se preferir, posso deixar para continuarmos depois.'
+      }
+    ];
+
+    const links = [
+      ['lara', 'greeting'],
+      ['lara', 'writing'],
+      ['lara', 'qualification'],
+      ['lara', 'catalog'],
+      ['lara', 'booking'],
+      ['lara', 'crm'],
+      ['lara', 'handoff'],
+      ['lara', 'inactive'],
+      ['qualification', 'booking'],
+      ['booking', 'crm'],
+      ['inactive', 'handoff']
+    ];
+
+    function cmd(type, value) {
+      return `/${type} ${String(value || '').trim()}`;
+    }
+
+    function setPreview(text) {
+      const clean = String(text || '').trim();
+      preview.textContent = clean || 'root';
+      openWhats.href = `https://wa.me/${ROOT_NUMBER}?text=${encodeURIComponent(preview.textContent)}`;
+    }
+
+    function point(node) {
+      return {
+        x: node.x * 10 + 71,
+        y: node.y * 5.2 + 36
+      };
+    }
+
+    function renderEdges() {
+      edges.innerHTML = links.map(([fromId, toId]) => {
+        const from = nodes.find(n => n.id === fromId);
+        const to = nodes.find(n => n.id === toId);
+        const a = point(from);
+        const b = point(to);
+        const midX = (a.x + b.x) / 2;
+        return `<path class="edge" d="M ${a.x} ${a.y} C ${midX} ${a.y}, ${midX} ${b.y}, ${b.x} ${b.y}" />`;
+      }).join('');
+    }
+
+    function renderNodes() {
+      nodes.forEach(node => {
+        const button = document.createElement('button');
+        button.className = `map-node ${node.kind}`;
+        button.dataset.node = node.id;
+        button.style.left = `${node.x}%`;
+        button.style.top = `${node.y}%`;
+        button.innerHTML = `<strong>${node.name}</strong><span>${node.group}</span>`;
+        button.addEventListener('click', () => selectNode(node.id));
+        contextMap.appendChild(button);
+      });
+    }
+
+    function renderBlockList() {
+      blockList.innerHTML = nodes.filter(n => n.id !== 'lara').map(node => `
+        <button class="block" data-node="${node.id}">
+          <small>${node.group}</small>
+          <strong>${node.name}</strong>
+          <span>${node.description}</span>
+        </button>
+      `).join('');
+      blockList.querySelectorAll('.block').forEach(block => {
+        block.addEventListener('click', () => selectNode(block.dataset.node));
+      });
+    }
+
+    function renderChat(node) {
+      chatPreview.innerHTML = `
+        <div class="bubble user">${node.exampleIn}</div>
+        <div class="bubble">${node.exampleOut}</div>
+      `;
+    }
+
+    function selectNode(id) {
+      const node = nodes.find(n => n.id === id) || nodes[0];
+      document.querySelectorAll('[data-node]').forEach(el => {
+        el.classList.toggle('active', el.dataset.node === node.id);
+      });
+      selectedName.value = node.name;
+      commandType.value = node.command;
+      nodeText.value = node.text;
+      nodeTitle.textContent = node.name;
+      nodeDescription.textContent = node.description;
+      renderChat(node);
+      setPreview(cmd(node.command, node.text));
+    }
+
+    document.querySelectorAll('[data-mode]').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('[data-mode]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const mode = tab.dataset.mode;
+        document.getElementById('studioMode').style.display = mode === 'studio' ? 'block' : 'none';
+        document.querySelectorAll('.legacy-panel').forEach(panel => panel.classList.remove('active'));
+        const target = document.getElementById(`${mode}Mode`);
+        if (target && mode !== 'studio') target.classList.add('active');
+      });
+    });
+
+    document.getElementById('buildNode').addEventListener('click', () => {
+      setPreview(cmd(commandType.value, nodeText.value));
+    });
+
+    document.getElementById('buildNodeExample').addEventListener('click', () => {
+      const node = nodes.find(n => n.name === selectedName.value) || nodes[0];
+      setPreview(cmd('exemplo', `entrada:${node.exampleIn}|saida:${node.exampleOut}`));
+    });
+
+    document.getElementById('buildQuick').addEventListener('click', () => {
+      const lines = [
+        cmd('objetivo', document.getElementById('quickObjective').value),
+        cmd('regra', document.getElementById('quickRule').value),
+        cmd('escrita', document.getElementById('quickWriting').value),
+        cmd('exemplo', 'entrada:Gostaria de agendar uma visita|saida:Claro. Antes de olhar os horarios, me conta o que voce quer ver na visita: aliancas, anel, peca personalizada ou manutencao?')
+      ];
+      setPreview(lines.join('\n'));
+    });
+
+    document.getElementById('buildExample').addEventListener('click', () => {
+      const input = document.getElementById('exampleInput').value.trim();
+      const output = document.getElementById('exampleOutput').value.trim();
+      setPreview(cmd('exemplo', `entrada:${input}|saida:${output}`));
+    });
+
+    document.getElementById('buildLink').addEventListener('click', () => {
+      const name = document.getElementById('linkName').value.trim();
+      const url = document.getElementById('linkUrl').value.trim();
+      const desc = document.getElementById('linkDesc').value.trim();
+      setPreview(cmd('link', `${name}|${url}|${desc}`));
+    });
+
+    document.getElementById('buildNewPrompt').addEventListener('click', () => {
+      setPreview(cmd('newprompt', document.getElementById('newPrompt').value));
+    });
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(preview.textContent);
+    });
+
+    document.getElementById('rootStart').addEventListener('click', () => setPreview('root'));
+    document.getElementById('rootStatus').addEventListener('click', () => setPreview('/status'));
+
+    renderEdges();
+    renderNodes();
+    renderBlockList();
+    selectNode('booking');
+  </script>
+</body>
+</html>
