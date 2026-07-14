@@ -1,0 +1,87 @@
+{
+  "version": "2026-07-14",
+  "description": "Jornadas multi-turn para validar a Lara V9 Shadow com mesmo numero fake e execucoes reais no n8n.",
+  "global_forbidden_patterns": [
+    "Guilherme de Morais",
+    "Rua das Flores",
+    "ja esta agendado",
+    "já está agendado",
+    "agendamento confirmado"
+  ],
+  "journeys": [
+    {
+      "id": "JOURNEY-01",
+      "title": "Abertura, nome e escolha de atendimento presencial",
+      "steps": [
+        {
+          "input": "Boa noite",
+          "expected_type": "response",
+          "required_patterns": ["informar seu nome"],
+          "forbidden_patterns": ["Prazer, Boa", "catálogo online"]
+        },
+        {
+          "input": "Jhonatan",
+          "expected_type": "response",
+          "required_patterns": ["Prazer, Jhonatan", "agendar um atendimento presencial"],
+          "forbidden_patterns": ["qual é o seu nome", "Sou a LARA"]
+        },
+        {
+          "input": "Quero atendimento presencial",
+          "expected_type": "action",
+          "expected_action": "check_availability",
+          "required_patterns": ["check_availability"],
+          "forbidden_patterns": ["agendamento confirmado", "endereço", "Maps"]
+        }
+      ]
+    },
+    {
+      "id": "JOURNEY-02",
+      "title": "Horario escolhido sem dados completos nao cria agendamento",
+      "steps": [
+        {
+          "input": "Meu nome é Mariana",
+          "expected_type": "response",
+          "required_patterns": ["Prazer, Mariana"],
+          "forbidden_patterns": ["Olá, tudo bem"]
+        },
+        {
+          "input": "Quero agendar uma visita para ver alianças",
+          "expected_type": "action",
+          "expected_action": "check_availability",
+          "required_patterns": ["check_availability", "aliança"],
+          "forbidden_patterns": ["agendamento confirmado", "endereço", "Maps"]
+        },
+        {
+          "input": "Pode ser às 10",
+          "expected_type": "response",
+          "required_patterns": ["nome completo", "motivo da visita"],
+          "forbidden_patterns": ["agendamento confirmado", "está agendado", "Prontinho"]
+        }
+      ]
+    },
+    {
+      "id": "JOURNEY-03",
+      "title": "Coleta de motivo antes de confirmar atendimento",
+      "steps": [
+        {
+          "input": "Me chamo Ana Paula",
+          "expected_type": "response",
+          "required_patterns": ["Prazer, Ana"],
+          "forbidden_patterns": ["Prazer, Me"]
+        },
+        {
+          "input": "Quero ver alianças para meu casamento",
+          "expected_type": "response",
+          "required_patterns": ["aliança"],
+          "forbidden_patterns": ["R$", "estoque", "agendamento confirmado"]
+        },
+        {
+          "input": "Quero uma pronta com gravação interna",
+          "expected_type": "response",
+          "required_patterns": ["gravação", "material"],
+          "forbidden_patterns": ["R$", "temos em estoque", "agendamento confirmado"]
+        }
+      ]
+    }
+  ]
+}

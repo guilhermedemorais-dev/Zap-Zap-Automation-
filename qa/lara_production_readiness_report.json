@@ -1,0 +1,102 @@
+{
+  "status": "BLOCKED",
+  "blockers": [
+    "real_whatsapp_shadow_test"
+  ],
+  "checks": [
+    {
+      "name": "prod_webhook_unchanged",
+      "ok": true,
+      "details": {
+        "id": "7SucjAi8zU69sQuT",
+        "name": "ORION-WF-Bot-v7-LARA-SDR",
+        "active": true,
+        "webhook_path": "whatsapp-inbound"
+      }
+    },
+    {
+      "name": "shadow_webhook_active",
+      "ok": true,
+      "details": {
+        "id": "7kXu17NYpsN8Yc65",
+        "name": "LARA V9 Shadow SDR",
+        "active": true,
+        "webhook_path": "whatsapp-inbound-v9-shadow"
+      }
+    },
+    {
+      "name": "single_turn_actual_outputs",
+      "ok": true,
+      "details": {
+        "mode": "actual_outputs",
+        "passed": 22,
+        "failed": 0,
+        "jsonl_ok": true,
+        "generated_at": "2026-07-14T20:18:10.674Z"
+      }
+    },
+    {
+      "name": "multi_turn_journeys",
+      "ok": true,
+      "details": {
+        "passed": 3,
+        "failed": 0,
+        "generated_at": "2026-07-14T20:18:19Z"
+      }
+    },
+    {
+      "name": "input_contract_payloads",
+      "ok": true,
+      "details": {
+        "workflow_id": "7kXu17NYpsN8Yc65",
+        "webhook_path": "whatsapp-inbound-v9-shadow",
+        "passed": 4,
+        "failed": 0,
+        "generated_at": "2026-07-14T19:40:59Z",
+        "execution_ids": [
+          "3982",
+          "3983",
+          "3984",
+          "3985"
+        ]
+      }
+    },
+    {
+      "name": "qa_side_effects_blocked",
+      "ok": true,
+      "details": {
+        "checked_executions": 31,
+        "failures": []
+      }
+    },
+    {
+      "name": "real_whatsapp_shadow_test",
+      "ok": false,
+      "details": {
+        "ok": false,
+        "path": "qa/lara_whatsapp_shadow_test.json",
+        "status": "PENDING",
+        "approved_by_user": false,
+        "shadow_webhook_url": "https://n8n-zcac.srv1478933.hstgr.cloud/webhook/whatsapp-inbound-v9-shadow",
+        "required_url": "https://n8n-zcac.srv1478933.hstgr.cloud/webhook/whatsapp-inbound-v9-shadow",
+        "missing_checks": [
+          "greeting_asks_name_without_using_profile_name",
+          "name_is_remembered_after_next_message",
+          "appointment_intent_checks_availability_before_booking",
+          "selected_time_without_reason_does_not_create_booking",
+          "visit_reason_is_collected_before_confirmation",
+          "address_is_correct_when_sent",
+          "human_request_routes_to_specialist_or_handoff",
+          "no_repeated_opening_loop",
+          "no_wrong_customer_name",
+          "no_obvious_hallucination"
+        ],
+        "failures": [],
+        "evidence_count": {
+          "n8n_execution_ids": 0,
+          "screenshots": 0
+        }
+      }
+    }
+  ]
+}

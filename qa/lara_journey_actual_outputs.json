@@ -1,0 +1,309 @@
+{
+  "description": "Outputs reais multi-turn capturados do n8n QA Simulator",
+  "journeys": {
+    "JOURNEY-01": [
+      {
+        "step": 1,
+        "input": "Boa noite",
+        "execution_id": "4039",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Olá, boa noite. Tudo bem?",
+            "Aqui é a Lara, consultora virtual da ORIN Joias.",
+            "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": ""
+          }
+        },
+        "meta": {
+          "execution_id": "4039",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      },
+      {
+        "step": 2,
+        "input": "Jhonatan",
+        "execution_id": "4040",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Prazer, Jhonatan.",
+            "Me conta o que você está buscando hoje?",
+            "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "",
+            "customer_name": "Jhonatan"
+          }
+        },
+        "meta": {
+          "execution_id": "4040",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      },
+      {
+        "step": 3,
+        "input": "Quero atendimento presencial",
+        "execution_id": "4041",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "action",
+          "action": "check_availability",
+          "message_blocks": [],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "atendimento presencial",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "atendimento presencial"
+          }
+        },
+        "meta": {
+          "execution_id": "4041",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      }
+    ],
+    "JOURNEY-02": [
+      {
+        "step": 1,
+        "input": "Meu nome é Mariana",
+        "execution_id": "4042",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Prazer, Mariana.",
+            "Me conta o que você está buscando hoje?",
+            "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "",
+            "customer_name": "Mariana"
+          }
+        },
+        "meta": {
+          "execution_id": "4042",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      },
+      {
+        "step": 2,
+        "input": "Quero agendar uma visita para ver alianças",
+        "execution_id": "4043",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "action",
+          "action": "check_availability",
+          "message_blocks": [],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "aliança",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "agendar visita",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "aliança"
+          }
+        },
+        "meta": {
+          "execution_id": "4043",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      },
+      {
+        "step": 3,
+        "input": "Pode ser às 10",
+        "execution_id": "4044",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Consigo seguir com esse horário, sim. Me confirma o dia, seu nome completo e o motivo da visita?"
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "aliança",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "agendar visita",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "aliança"
+          }
+        },
+        "meta": {
+          "execution_id": "4044",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      }
+    ],
+    "JOURNEY-03": [
+      {
+        "step": 1,
+        "input": "Me chamo Ana Paula",
+        "execution_id": "4045",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Prazer, Ana.",
+            "Me conta o que você está buscando hoje?",
+            "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "",
+            "material": "",
+            "ocasiao": "",
+            "orcamento": "",
+            "urgencia": "",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "",
+            "customer_name": "Ana Paula"
+          }
+        },
+        "meta": {
+          "execution_id": "4045",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      },
+      {
+        "step": 2,
+        "input": "Quero ver alianças para meu casamento",
+        "execution_id": "4046",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Ana Paula, para ajudar a encontrar a aliança ideal para seu casamento, você prefere algum material específico, como ouro amarelo, branco ou rosé?",
+            "E qual estilo mais chama sua atenção: clássico, moderno ou personalizado?"
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "alianças",
+            "material": "",
+            "ocasiao": "casamento",
+            "orcamento": "",
+            "urgencia": "",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "alianças"
+          }
+        },
+        "meta": {
+          "execution_id": "4046",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      },
+      {
+        "step": 3,
+        "input": "Quero uma pronta com gravação interna",
+        "execution_id": "4047",
+        "ok": true,
+        "errors": [],
+        "output": {
+          "type": "response",
+          "action": null,
+          "message_blocks": [
+            "Ana Paula, entendi que você deseja uma aliança pronta com gravação interna para casamento.",
+            "Qual frase ou nome gostaria de gravar?",
+            "Também gostaria de saber se tem preferência pelo material da aliança."
+          ],
+          "action_args": {},
+          "crm_context": {
+            "interesse": "aliança pronta com gravação",
+            "material": "",
+            "ocasiao": "casamento",
+            "orcamento": "",
+            "urgencia": "pronta",
+            "summary_for_human": "",
+            "recommended_next_step": "",
+            "visit_reason": "aliança pronta com gravação"
+          }
+        },
+        "meta": {
+          "execution_id": "4047",
+          "forbidden_hits": [],
+          "nodes_executed": 30,
+          "root_qa": false,
+          "qa_output": true
+        }
+      }
+    ]
+  }
+}

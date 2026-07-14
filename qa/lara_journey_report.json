@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-14T20:18:19Z",
+  "workflow_id": "7kXu17NYpsN8Yc65",
+  "webhook_path": "whatsapp-inbound-v9-shadow",
+  "total_journeys": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "id": "JOURNEY-01",
+      "title": "Abertura, nome e escolha de atendimento presencial",
+      "fake_number": "+550000000901",
+      "ok": true,
+      "errors": [],
+      "executions": [
+        "4039",
+        "4040",
+        "4041"
+      ]
+    },
+    {
+      "id": "JOURNEY-02",
+      "title": "Horario escolhido sem dados completos nao cria agendamento",
+      "fake_number": "+550000000902",
+      "ok": true,
+      "errors": [],
+      "executions": [
+        "4042",
+        "4043",
+        "4044"
+      ]
+    },
+    {
+      "id": "JOURNEY-03",
+      "title": "Coleta de motivo antes de confirmar atendimento",
+      "fake_number": "+550000000903",
+      "ok": true,
+      "errors": [],
+      "executions": [
+        "4045",
+        "4046",
+        "4047"
+      ]
+    }
+  ]
+}

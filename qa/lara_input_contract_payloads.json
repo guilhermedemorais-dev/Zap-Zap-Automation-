@@ -1,0 +1,74 @@
+[
+  {
+    "id": "INPUT-UAZAPI-CURRENT",
+    "description": "Formato usado pelo harness atual, com EventType messages e message no body.",
+    "payload": {
+      "EventType": "messages",
+      "qa_mode": true,
+      "fake_number": "+5500000001001",
+      "message": {
+        "chatid": "5547999910001@s.whatsapp.net",
+        "messageid": "input-uazapi-current-001",
+        "text": "Boa noite",
+        "body": "Boa noite",
+        "pushName": "Nome Perfil",
+        "fromMe": false
+      }
+    },
+    "expected_contains": ["informar seu nome"]
+  },
+  {
+    "id": "INPUT-EVOLUTION-UPSERT",
+    "description": "Formato comum Baileys/Evolution, com event messages.upsert e data.key/message.",
+    "payload": {
+      "event": "messages.upsert",
+      "qa_mode": true,
+      "fake_number": "+5500000001002",
+      "data": {
+        "key": {
+          "id": "input-evolution-upsert-001",
+          "remoteJid": "5547999910002@s.whatsapp.net",
+          "fromMe": false
+        },
+        "pushName": "Nome Perfil",
+        "message": {
+          "conversation": "Boa noite"
+        },
+        "messageType": "conversation"
+      }
+    },
+    "expected_contains": ["informar seu nome"]
+  },
+  {
+    "id": "INPUT-DATA-TEXT",
+    "description": "Formato data direto, com texto em data.text.",
+    "payload": {
+      "type": "messages",
+      "qa_mode": true,
+      "fake_number": "+5500000001003",
+      "data": {
+        "id": "input-data-text-001",
+        "chatid": "5547999910003@s.whatsapp.net",
+        "text": "Meu nome é Guilherme",
+        "pushName": "Nome Perfil",
+        "fromMe": false
+      }
+    },
+    "expected_contains": ["Guilherme"]
+  },
+  {
+    "id": "INPUT-FLAT",
+    "description": "Formato achatado defensivo, caso o provedor entregue campos na raiz.",
+    "payload": {
+      "EventType": "messages",
+      "qa_mode": true,
+      "fake_number": "+5500000001004",
+      "id": "input-flat-001",
+      "chatid": "5547999910004@s.whatsapp.net",
+      "text": "Onde fica a loja?",
+      "pushName": "Nome Perfil",
+      "fromMe": false
+    },
+    "expected_contains": ["Av. Brasil, 1500", "maps.app.goo.gl/geMC3hHsQqGfSnnm6"]
+  }
+]

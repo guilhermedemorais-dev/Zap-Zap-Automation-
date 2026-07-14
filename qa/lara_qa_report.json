@@ -1,0 +1,154 @@
+{
+  "generated_at": "2026-07-14T20:18:10.674Z",
+  "mode": "actual_outputs",
+  "actual_path": "/home/guimp/Documentos/n8n orin joias/qa/lara_actual_outputs.json",
+  "knowledge_files": [
+    "knowledge/atendimento.jsonl",
+    "knowledge/faq.jsonl",
+    "knowledge/links.jsonl",
+    "knowledge/loja.jsonl",
+    "knowledge/politicas.jsonl",
+    "knowledge/produtos_genericos.jsonl"
+  ],
+  "jsonl_ok": true,
+  "jsonl_errors": [],
+  "total_scenarios": 22,
+  "total_scenarios_available": 22,
+  "allow_partial": true,
+  "passed": 22,
+  "failed": 0,
+  "results": [
+    {
+      "id": "QA-01",
+      "title": "Saudacao sem nome",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-02",
+      "title": "Cliente informa nome",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-03",
+      "title": "Cliente pede catalogo",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-04",
+      "title": "Produto especifico sem catalogo",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-05",
+      "title": "Cliente pergunta preco",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-06",
+      "title": "Cliente pede endereco",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-07",
+      "title": "Cliente quer agendar sem nome confirmado",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-08",
+      "title": "CRM retorna horarios",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-09",
+      "title": "Cliente escolhe horario sem nome completo",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-10",
+      "title": "Cliente informa nome e interesse sem horário escolhido",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-11",
+      "title": "Cliente some",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-12",
+      "title": "Cliente pede humano",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-13",
+      "title": "Memoria com nome errado",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-14",
+      "title": "Produto com link inexistente",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-15",
+      "title": "Primeira mensagem de agendamento sem nome",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-16",
+      "title": "Primeira mensagem monossilábica",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-17",
+      "title": "Cliente responde apenas o primeiro nome",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-18",
+      "title": "Saudacao com Oii nao vira nome",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-19",
+      "title": "Cliente responde nome em minusculo",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-20",
+      "title": "Saudacao composta nao vira nome",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-21",
+      "title": "Frase meu nome e extrai o nome real",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "id": "QA-22",
+      "title": "Comando ROOT desconhecido nao entra em modo livre",
+      "ok": true,
+      "errors": []
+    }
+  ]
+}

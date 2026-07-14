@@ -1,0 +1,490 @@
+{
+  "version": "2026-06-30",
+  "description": "Cenarios offline para QA da Lara. O runner valida blocos, acoes esperadas e padroes proibidos.",
+  "global_forbidden_patterns": [
+    "temos em estoque",
+    "esta disponivel",
+    "custa r\\$",
+    "por apenas",
+    "link direto do produto",
+    "produto/alianca",
+    "ja esta agendado"
+  ],
+  "scenarios": [
+    {
+      "id": "QA-01",
+      "title": "Saudacao sem nome",
+      "input": "Olá",
+      "expected": {
+        "type": "response",
+        "min_message_blocks": 3,
+        "message_blocks": [
+          "Olá, tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Guilherme",
+        "Mariana",
+        "catálogo"
+      ],
+      "required_patterns": [
+        "nome"
+      ]
+    },
+    {
+      "id": "QA-02",
+      "title": "Cliente informa nome",
+      "input": "Meu nome é Mariana",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Prazer, Mariana.",
+          "Me conta o que você está buscando hoje: alianças, uma joia para presente, personalização ou um horário para atendimento?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Olá, tudo bem",
+        "Guilherme"
+      ],
+      "required_patterns": [
+        "Prazer, Mariana"
+      ]
+    },
+    {
+      "id": "QA-03",
+      "title": "Cliente pede catalogo",
+      "input": "Vocês têm catálogo?",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Ainda não tenho um catálogo online com link direto das peças.",
+          "Mas posso te ajudar por aqui e encaminhar para uma especialista verificar as opções disponíveis.",
+          "Você está procurando alianças, anel, colar, brinco ou uma joia personalizada?"
+        ]
+      },
+      "forbidden_patterns": [
+        "acesse nosso catálogo",
+        "https://site/produto",
+        "produto/"
+      ],
+      "required_patterns": [
+        "não tenho um catálogo online"
+      ]
+    },
+    {
+      "id": "QA-04",
+      "title": "Produto especifico sem catalogo",
+      "input": "Tem aliança em ouro 17k de 3mm?",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Ainda não tenho um catálogo online com link direto desse modelo.",
+          "Mas consigo encaminhar para uma especialista verificar as opções disponíveis para você.",
+          "É para casamento, noivado ou outro momento especial?"
+        ]
+      },
+      "forbidden_patterns": [
+        "temos esse modelo",
+        "ouro 17k disponível",
+        "R$",
+        "https://"
+      ],
+      "required_patterns": [
+        "especialista"
+      ]
+    },
+    {
+      "id": "QA-05",
+      "title": "Cliente pergunta preco",
+      "input": "Quanto custa uma aliança dessas?",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Os valores variam conforme material, medida e acabamento.",
+          "Pra eu não te passar nada errado, uma especialista precisa confirmar as opções certinhas.",
+          "Você quer que eu verifique um horário para atendimento?"
+        ]
+      },
+      "forbidden_patterns": [
+        "R$",
+        "custa",
+        "valor é",
+        "parcelamos"
+      ],
+      "required_patterns": [
+        "valores variam"
+      ]
+    },
+    {
+      "id": "QA-06",
+      "title": "Cliente pede endereco",
+      "input": "Onde fica a loja?",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "A ORIN Joias fica na Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901.",
+          "Google Maps: https://maps.app.goo.gl/geMC3hHsQqGfSnnm6",
+          "Quer que eu verifique um horário para você ser atendida?"
+        ]
+      },
+      "forbidden_patterns": [
+        "acho que",
+        "não sei"
+      ],
+      "required_patterns": [
+        "Av. Brasil, 1500",
+        "88330-901",
+        "Google Maps"
+      ]
+    },
+    {
+      "id": "QA-07",
+      "title": "Cliente quer agendar sem nome confirmado",
+      "input": "Quero agendar uma visita",
+      "expected": {
+        "type": "response",
+        "min_message_blocks": 3,
+        "message_blocks": [
+          "Olá, tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+        ]
+      },
+      "forbidden_patterns": [
+        "confirmado",
+        "agendado",
+        "catálogo",
+        "Guilherme"
+      ],
+      "required_patterns": [
+        "nome"
+      ]
+    },
+    {
+      "id": "QA-08",
+      "title": "CRM retorna horarios",
+      "input": "tool_result: available_slots",
+      "expected": {
+        "type": "post_action_response",
+        "message_blocks": [
+          "Tenho estes horários disponíveis:",
+          "01/07 às 09:00\n01/07 às 10:00\n01/07 às 11:00",
+          "Qual desses funciona melhor para você?"
+        ]
+      },
+      "forbidden_patterns": [
+        "endereço",
+        "Maps",
+        "confirmado"
+      ],
+      "required_patterns": [
+        "09:00",
+        "10:00",
+        "11:00"
+      ]
+    },
+    {
+      "id": "QA-09",
+      "title": "Cliente escolhe horario sem nome completo",
+      "input": "Pode ser às 10",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Perfeito, vou confirmar esse horário.",
+          "Antes, me passa seu nome completo e o motivo da visita?"
+        ]
+      },
+      "forbidden_patterns": [
+        "agendamento confirmado",
+        "está agendado"
+      ],
+      "required_patterns": [
+        "nome completo",
+        "motivo da visita"
+      ]
+    },
+    {
+      "id": "QA-10",
+      "title": "Cliente informa nome e interesse sem horário escolhido",
+      "input": "Mariana Souza, quero ver alianças para casamento",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Prazer, Mariana.",
+          "Entendi que você quer ver alianças.",
+          "Posso verificar um horário para atendimento na loja ou encaminhar para uma especialista te ajudar com as opções."
+        ]
+      },
+      "forbidden_patterns": [
+        "preço",
+        "estoque",
+        "agendamento confirmado",
+        "está agendado",
+        "catálogo online"
+      ],
+      "required_patterns": [
+        "Mariana",
+        "alianças"
+      ]
+    },
+    {
+      "id": "QA-11",
+      "title": "Cliente some",
+      "input": "timeout: 5min",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Ainda posso te ajudar com esse atendimento?",
+          "Se preferir, posso deixar para uma especialista continuar com você."
+        ]
+      },
+      "forbidden_patterns": [
+        "encerrado",
+        "vou encerrar"
+      ],
+      "required_patterns": [
+        "Ainda posso te ajudar"
+      ]
+    },
+    {
+      "id": "QA-12",
+      "title": "Cliente pede humano",
+      "input": "Quero falar com uma atendente",
+      "expected": {
+        "type": "handoff",
+        "reason": "cliente_pediu_humano",
+        "message_blocks": [
+          "Claro, vou encaminhar seu atendimento para uma especialista da ORIN.",
+          "Vou deixar um resumo do que você me contou para ela continuar sem te fazer repetir tudo."
+        ]
+      },
+      "forbidden_patterns": [
+        "posso resolver por aqui",
+        "não precisa"
+      ],
+      "required_patterns": [
+        "especialista"
+      ]
+    },
+    {
+      "id": "QA-13",
+      "title": "Memoria com nome errado",
+      "input": "Oi, queria ver alianças",
+      "context": {
+        "previous_customer_name": "Guilherme",
+        "current_confirmed_name": null
+      },
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Olá, tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?",
+          "Sobre alianças, posso te ajudar por aqui e encaminhar para uma especialista verificar as opções disponíveis."
+        ]
+      },
+      "forbidden_patterns": [
+        "Guilherme",
+        "Como você comentou antes",
+        "atendimento anterior"
+      ],
+      "required_patterns": [
+        "informar seu nome"
+      ]
+    },
+    {
+      "id": "QA-14",
+      "title": "Produto com link inexistente",
+      "input": "Me manda o link dessa aliança",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Ainda não tenho link direto de produto para te enviar.",
+          "Posso encaminhar para uma especialista verificar esse modelo ou agendar um atendimento para você conhecer as opções."
+        ]
+      },
+      "forbidden_patterns": [
+        "https://site/produto",
+        "produto/",
+        "temos esse modelo disponível",
+        "R$"
+      ],
+      "required_patterns": [
+        "não tenho link direto"
+      ]
+    },
+    {
+      "id": "QA-15",
+      "title": "Primeira mensagem de agendamento sem nome",
+      "input": "Gostaria de agendar uma visita",
+      "expected": {
+        "type": "response",
+        "min_message_blocks": 3,
+        "message_blocks": [
+          "Olá, tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Guilherme",
+        "catálogo",
+        "agendamento confirmado",
+        "Vou confirmar agora"
+      ],
+      "required_patterns": [
+        "nome"
+      ]
+    },
+    {
+      "id": "QA-16",
+      "title": "Primeira mensagem monossilábica",
+      "input": "Ok",
+      "expected": {
+        "type": "response",
+        "min_message_blocks": 3,
+        "message_blocks": [
+          "Olá, tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Guilherme",
+        "Mariana",
+        "catálogo"
+      ],
+      "required_patterns": [
+        "nome"
+      ]
+    },
+    {
+      "id": "QA-17",
+      "title": "Cliente responde apenas o primeiro nome",
+      "input": "Jhonatan",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Prazer, Jhonatan.",
+          "Me conta o que você está buscando hoje?",
+          "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+        ]
+      },
+      "forbidden_patterns": [
+        "qual é o seu nome",
+        "Sou a LARA",
+        "Olá, tudo bem"
+      ],
+      "required_patterns": [
+        "Prazer, Jhonatan"
+      ]
+    },
+    {
+      "id": "QA-18",
+      "title": "Saudacao com Oii nao vira nome",
+      "input": "Oii",
+      "expected": {
+        "type": "response",
+        "min_message_blocks": 3,
+        "message_blocks": [
+          "Olá, tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Prazer, Oii",
+        "customer_name"
+      ],
+      "required_patterns": [
+        "informar seu nome"
+      ]
+    },
+    {
+      "id": "QA-19",
+      "title": "Cliente responde nome em minusculo",
+      "input": "jhonatan",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Prazer, Jhonatan.",
+          "Me conta o que você está buscando hoje?",
+          "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+        ]
+      },
+      "forbidden_patterns": [
+        "qual é o seu nome",
+        "Sou a LARA"
+      ],
+      "required_patterns": [
+        "Prazer, Jhonatan"
+      ]
+    },
+    {
+      "id": "QA-20",
+      "title": "Saudacao composta nao vira nome",
+      "input": "Boa noite",
+      "expected": {
+        "type": "response",
+        "min_message_blocks": 3,
+        "message_blocks": [
+          "Olá, boa noite. Tudo bem?",
+          "Aqui é a Lara, consultora virtual da ORIN Joias.",
+          "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Prazer, Boa",
+        "customer_name"
+      ],
+      "required_patterns": [
+        "informar seu nome"
+      ]
+    },
+    {
+      "id": "QA-21",
+      "title": "Frase meu nome e extrai o nome real",
+      "input": "Meu nome é Guilherme",
+      "expected": {
+        "type": "response",
+        "message_blocks": [
+          "Prazer, Guilherme.",
+          "Me conta o que você está buscando hoje?",
+          "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+        ]
+      },
+      "forbidden_patterns": [
+        "Perfeito, Meu",
+        "qual é o seu nome",
+        "Sou a LARA",
+        "Olá, tudo bem"
+      ],
+      "required_patterns": [
+        "Prazer, Guilherme"
+      ]
+    },
+    {
+      "id": "QA-22",
+      "title": "Comando ROOT desconhecido nao entra em modo livre",
+      "input": "/rest",
+      "expected": {
+        "type": "root_command_error",
+        "message_blocks": [
+          "Comando não reconhecido.",
+          "Você quis dizer /reset?",
+          "Use /help para ver os comandos disponíveis."
+        ]
+      },
+      "forbidden_patterns": [
+        "Nenhuma alteração foi identificada",
+        "alteração aplicada",
+        "Configurações resetadas"
+      ],
+      "required_patterns": [
+        "Comando não reconhecido"
+      ]
+    }
+  ]
+}

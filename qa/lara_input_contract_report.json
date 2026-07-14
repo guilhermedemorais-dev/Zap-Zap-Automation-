@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-07-14T19:40:59Z",
+  "workflow_id": "7kXu17NYpsN8Yc65",
+  "webhook_path": "whatsapp-inbound-v9-shadow",
+  "passed": 4,
+  "failed": 0,
+  "results": [
+    {
+      "id": "INPUT-UAZAPI-CURRENT",
+      "ok": true,
+      "execution_id": "3982",
+      "errors": [],
+      "output_excerpt": "Olá, boa noite. Tudo bem?\nAqui é a Lara, consultora virtual da ORIN Joias.\nPara que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+    },
+    {
+      "id": "INPUT-EVOLUTION-UPSERT",
+      "ok": true,
+      "execution_id": "3983",
+      "errors": [],
+      "output_excerpt": "Olá, boa noite. Tudo bem?\nAqui é a Lara, consultora virtual da ORIN Joias.\nPara que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+    },
+    {
+      "id": "INPUT-DATA-TEXT",
+      "ok": true,
+      "execution_id": "3984",
+      "errors": [],
+      "output_excerpt": "Prazer, Guilherme.\nMe conta o que você está buscando hoje?\nSe quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+    },
+    {
+      "id": "INPUT-FLAT",
+      "ok": true,
+      "execution_id": "3985",
+      "errors": [],
+      "output_excerpt": "A ORIN Joias fica na Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901.\nGoogle Maps: https://maps.app.goo.gl/geMC3hHsQqGfSnnm6\nQuer que eu verifique um horário para você ser atendida?"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "status": "PENDING",
+  "tested_at": "2026-07-14T00:00:00-03:00",
+  "tester": "nome de quem testou",
+  "test_number": "+55 XX XXXXX-XXXX",
+  "shadow_webhook_url": "https://n8n-zcac.srv1478933.hstgr.cloud/webhook/whatsapp-inbound-v9-shadow",
+  "production_number": "+55 47 9696-3593",
+  "approved_by_user": false,
+  "evidence": {
+    "screenshots": [],
+    "n8n_execution_ids": [],
+    "notes": ""
+  },
+  "checklist": {
+    "greeting_asks_name_without_using_profile_name": false,
+    "name_is_remembered_after_next_message": false,
+    "appointment_intent_checks_availability_before_booking": false,
+    "selected_time_without_reason_does_not_create_booking": false,
+    "visit_reason_is_collected_before_confirmation": false,
+    "address_is_correct_when_sent": false,
+    "human_request_routes_to_specialist_or_handoff": false,
+    "no_repeated_opening_loop": false,
+    "no_wrong_customer_name": false,
+    "no_obvious_hallucination": false
+  },
+  "failures": []
+}
