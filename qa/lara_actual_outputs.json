@@ -20,7 +20,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4008"
+      "execution_id": "4067"
     },
     "QA-02": {
       "type": "response",
@@ -42,7 +42,7 @@
         "visit_reason": "",
         "customer_name": "Mariana"
       },
-      "execution_id": "4009"
+      "execution_id": "4068"
     },
     "QA-03": {
       "type": "response",
@@ -63,7 +63,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4010"
+      "execution_id": "4069"
     },
     "QA-04": {
       "type": "response",
@@ -85,7 +85,7 @@
         "recommended_next_step": "",
         "visit_reason": "aliança"
       },
-      "execution_id": "4011"
+      "execution_id": "4070"
     },
     "QA-05": {
       "type": "response",
@@ -106,7 +106,7 @@
         "recommended_next_step": "",
         "visit_reason": "aliança"
       },
-      "execution_id": "4012"
+      "execution_id": "4071"
     },
     "QA-06": {
       "type": "response",
@@ -127,7 +127,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4013"
+      "execution_id": "4072"
     },
     "QA-07": {
       "type": "response",
@@ -149,7 +149,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4014"
+      "execution_id": "4073"
     },
     "QA-08": {
       "type": "post_action_response",
@@ -170,7 +170,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4015"
+      "execution_id": "4074"
     },
     "QA-09": {
       "type": "response",
@@ -189,7 +189,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4016"
+      "execution_id": "4075"
     },
     "QA-10": {
       "type": "response",
@@ -201,16 +201,17 @@
       ],
       "action_args": {},
       "crm_context": {
-        "interesse": "aliança",
+        "interesse": "alianças",
         "material": "",
         "ocasiao": "casamento",
         "orcamento": "",
         "urgencia": "",
         "summary_for_human": "",
         "recommended_next_step": "",
-        "visit_reason": "aliança"
+        "visit_reason": "alianças",
+        "customer_name": "Mariana Souza"
       },
-      "execution_id": "4017"
+      "execution_id": "4076"
     },
     "QA-11": {
       "type": "response",
@@ -230,7 +231,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4018"
+      "execution_id": "4077"
     },
     "QA-12": {
       "type": "handoff",
@@ -250,7 +251,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4019"
+      "execution_id": "4078"
     },
     "QA-13": {
       "type": "response",
@@ -272,7 +273,7 @@
         "recommended_next_step": "",
         "visit_reason": "alianças"
       },
-      "execution_id": "4020"
+      "execution_id": "4079"
     },
     "QA-14": {
       "type": "response",
@@ -292,7 +293,7 @@
         "recommended_next_step": "",
         "visit_reason": "aliança"
       },
-      "execution_id": "4021"
+      "execution_id": "4080"
     },
     "QA-15": {
       "type": "response",
@@ -314,7 +315,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4022"
+      "execution_id": "4081"
     },
     "QA-16": {
       "type": "response",
@@ -335,15 +336,14 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4023"
+      "execution_id": "4082"
     },
     "QA-17": {
       "type": "response",
       "action": null,
       "message_blocks": [
-        "Prazer, Jhonatan.",
-        "Me conta o que você está buscando hoje?",
-        "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+        "Perfeito, Jhonatan.",
+        "Me confirma só o que você prefere agora: ver o catálogo, tirar uma dúvida sobre joias ou agendar um atendimento presencial?"
       ],
       "action_args": {},
       "crm_context": {
@@ -357,7 +357,7 @@
         "visit_reason": "",
         "customer_name": "Jhonatan"
       },
-      "execution_id": "4024"
+      "execution_id": "4083"
     },
     "QA-18": {
       "type": "response",
@@ -378,7 +378,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4025"
+      "execution_id": "4084"
     },
     "QA-19": {
       "type": "response",
@@ -400,7 +400,7 @@
         "visit_reason": "",
         "customer_name": "Jhonatan"
       },
-      "execution_id": "4026"
+      "execution_id": "4085"
     },
     "QA-20": {
       "type": "response",
@@ -421,7 +421,7 @@
         "recommended_next_step": "",
         "visit_reason": ""
       },
-      "execution_id": "4027"
+      "execution_id": "4086"
     },
     "QA-21": {
       "type": "response",
@@ -443,7 +443,7 @@
         "visit_reason": "",
         "customer_name": "Guilherme"
       },
-      "execution_id": "4028"
+      "execution_id": "4087"
     },
     "QA-22": {
       "type": "root_command_error",
@@ -455,7 +455,7 @@
       ],
       "action_args": {},
       "crm_context": {},
-      "execution_id": "4029"
+      "execution_id": "4088"
     }
   }
 }

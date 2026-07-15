@@ -32,16 +32,17 @@
         "passed": 22,
         "failed": 0,
         "jsonl_ok": true,
-        "generated_at": "2026-07-14T20:18:10.674Z"
+        "generated_at": "2026-07-15T05:33:13.003Z"
       }
     },
     {
       "name": "multi_turn_journeys",
       "ok": true,
       "details": {
-        "passed": 3,
+        "total_journeys": 4,
+        "passed": 4,
         "failed": 0,
-        "generated_at": "2026-07-14T20:18:19Z"
+        "generated_at": "2026-07-15T05:23:40Z"
       }
     },
     {
@@ -65,7 +66,7 @@
       "name": "qa_side_effects_blocked",
       "ok": true,
       "details": {
-        "checked_executions": 31,
+        "checked_executions": 34,
         "failures": []
       }
     },

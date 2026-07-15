@@ -367,7 +367,7 @@
       "expected": {
         "type": "response",
         "message_blocks": [
-          "Prazer, Jhonatan.",
+          "Perfeito, Jhonatan.",
           "Me conta o que você está buscando hoje?",
           "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
         ]
@@ -378,7 +378,7 @@
         "Olá, tudo bem"
       ],
       "required_patterns": [
-        "Prazer, Jhonatan"
+        "Perfeito, Jhonatan"
       ]
     },
     {

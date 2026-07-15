@@ -16,21 +16,38 @@
         {
           "input": "Boa noite",
           "expected_type": "response",
-          "required_patterns": ["informar seu nome"],
-          "forbidden_patterns": ["Prazer, Boa", "catálogo online"]
+          "required_patterns": [
+            "informar seu nome"
+          ],
+          "forbidden_patterns": [
+            "Prazer, Boa",
+            "catálogo online"
+          ]
         },
         {
           "input": "Jhonatan",
           "expected_type": "response",
-          "required_patterns": ["Prazer, Jhonatan", "agendar um atendimento presencial"],
-          "forbidden_patterns": ["qual é o seu nome", "Sou a LARA"]
+          "required_patterns": [
+            "Prazer, Jhonatan",
+            "agendar um atendimento presencial"
+          ],
+          "forbidden_patterns": [
+            "qual é o seu nome",
+            "Sou a LARA"
+          ]
         },
         {
           "input": "Quero atendimento presencial",
           "expected_type": "action",
           "expected_action": "check_availability",
-          "required_patterns": ["check_availability"],
-          "forbidden_patterns": ["agendamento confirmado", "endereço", "Maps"]
+          "required_patterns": [
+            "check_availability"
+          ],
+          "forbidden_patterns": [
+            "agendamento confirmado",
+            "endereço",
+            "Maps"
+          ]
         }
       ]
     },
@@ -41,21 +58,39 @@
         {
           "input": "Meu nome é Mariana",
           "expected_type": "response",
-          "required_patterns": ["Prazer, Mariana"],
-          "forbidden_patterns": ["Olá, tudo bem"]
+          "required_patterns": [
+            "Prazer, Mariana"
+          ],
+          "forbidden_patterns": [
+            "Olá, tudo bem"
+          ]
         },
         {
           "input": "Quero agendar uma visita para ver alianças",
           "expected_type": "action",
           "expected_action": "check_availability",
-          "required_patterns": ["check_availability", "aliança"],
-          "forbidden_patterns": ["agendamento confirmado", "endereço", "Maps"]
+          "required_patterns": [
+            "check_availability",
+            "aliança"
+          ],
+          "forbidden_patterns": [
+            "agendamento confirmado",
+            "endereço",
+            "Maps"
+          ]
         },
         {
           "input": "Pode ser às 10",
           "expected_type": "response",
-          "required_patterns": ["nome completo", "motivo da visita"],
-          "forbidden_patterns": ["agendamento confirmado", "está agendado", "Prontinho"]
+          "required_patterns": [
+            "nome completo",
+            "motivo da visita"
+          ],
+          "forbidden_patterns": [
+            "agendamento confirmado",
+            "está agendado",
+            "Prontinho"
+          ]
         }
       ]
     },
@@ -66,20 +101,80 @@
         {
           "input": "Me chamo Ana Paula",
           "expected_type": "response",
-          "required_patterns": ["Prazer, Ana"],
-          "forbidden_patterns": ["Prazer, Me"]
+          "required_patterns": [
+            "Prazer, Ana"
+          ],
+          "forbidden_patterns": [
+            "Prazer, Me"
+          ]
         },
         {
           "input": "Quero ver alianças para meu casamento",
           "expected_type": "response",
-          "required_patterns": ["aliança"],
-          "forbidden_patterns": ["R$", "estoque", "agendamento confirmado"]
+          "required_patterns": [
+            "aliança"
+          ],
+          "forbidden_patterns": [
+            "R$",
+            "estoque",
+            "agendamento confirmado"
+          ]
         },
         {
           "input": "Quero uma pronta com gravação interna",
           "expected_type": "response",
-          "required_patterns": ["gravação", "material"],
-          "forbidden_patterns": ["R$", "temos em estoque", "agendamento confirmado"]
+          "required_patterns": [
+            "gravação",
+            "material"
+          ],
+          "forbidden_patterns": [
+            "R$",
+            "temos em estoque",
+            "agendamento confirmado"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "JOURNEY-04",
+      "title": "Nome informado nao pode ser pedido de novo ao solicitar agendamento",
+      "steps": [
+        {
+          "input": "Boa noite",
+          "expected_type": "response",
+          "required_patterns": [
+            "informar seu nome"
+          ],
+          "forbidden_patterns": [
+            "Prazer, Boa"
+          ]
+        },
+        {
+          "input": "Guilherme",
+          "expected_type": "response",
+          "required_patterns": [
+            "Guilherme",
+            "agendar um atendimento presencial"
+          ],
+          "forbidden_patterns": [
+            "qual é o seu nome",
+            "poderia me informar seu nome"
+          ]
+        },
+        {
+          "input": "Gostaria de agendar um atendimento",
+          "expected_type": "action",
+          "expected_action": "check_availability",
+          "required_patterns": [
+            "check_availability",
+            "Guilherme"
+          ],
+          "forbidden_patterns": [
+            "poderia me informar seu nome",
+            "qual é o seu nome",
+            "Olá, tudo bem",
+            "Depois disso eu verifico"
+          ]
         }
       ]
     }

@@ -17,10 +17,11 @@ A Lara V9 ja esta criada e ativa no n8n remoto como workflow shadow. Ela ainda n
 
 ## O que ja foi validado
 
-- QA remoto do n8n contra output real do shadow: `22/22` cenarios passaram apos o patch de entrada.
-- Execucoes single-turn atuais: `4008` a `4029`.
-- QA multi-turn remoto do n8n: `3/3` jornadas passaram apos o patch de entrada.
-- Execucoes multi-turn atuais: `4039` a `4047`.
+- QA remoto do n8n contra output real do shadow: `22/22` cenarios passaram apos o patch de entrada e o guard de estado.
+- Execucoes single-turn atuais: `4067` a `4088`.
+- QA multi-turn remoto do n8n: `4/4` jornadas passaram apos o guard que impede pedir nome de novo ao solicitar agendamento.
+- Execucoes multi-turn atuais: `4055` a `4066`.
+- Caso real coberto: depois de `Boa noite` + `Guilherme` + `Gostaria de agendar um atendimento`, a Lara chama `check_availability` e nao reinicia saudacao nem pede nome novamente.
 - QA de contrato de entrada WhatsApp/provedor: `4/4` payloads passaram.
 - Execucoes contrato de entrada: `3982` a `3985`.
 - Payloads validados: UAZAPI atual, Evolution/Baileys `messages.upsert`, `data.text` e payload achatado defensivo.

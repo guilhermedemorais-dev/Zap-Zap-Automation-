@@ -298,8 +298,55 @@ Validacao executada:
   - Output real salvo em `qa/lara_actual_outputs.json`.
   - Relatorio salvo em `qa/lara_qa_report.json`.
   - Resultado do runner: 22/22 cenarios passaram em `actual_outputs`.
-  - JSONL knowledge: OK, sem erros de parse.
-  - Side effects bloqueados: nenhum no proibido de envio WhatsApp, CRM, agenda ou ROOT save foi executado nas 22 execucoes.
+
+### Bloco executado: guard de estado contra reinicio de atendimento
+
+Aplicado em 2026-07-15 no workflow shadow `LARA V9 Shadow SDR`, id `7kXu17NYpsN8Yc65`.
+
+Motivo:
+
+- Teste real no WhatsApp mostrou que, depois de capturar `Guilherme`, a Lara recebeu `Gostaria de agendar um atendimento` e reiniciou a saudacao, pedindo nome novamente.
+
+Implementado:
+
+- criado `scripts/lara_patch_shadow_state_guard.py`;
+- patch aplicado somente no shadow, webhook `whatsapp-inbound-v9-shadow`;
+- o parser agora consulta historico bruto de `Get chat_history`, `Get chat_history1` e payload QA antes de aceitar que nao ha contexto;
+- se houver nome confirmado no historico e o cliente pedir agendamento, o parser forca `action=check_availability`;
+- nesse caso, a Lara responde com pre-blocos de verificacao de agenda e nao repete saudacao nem pergunta nome de novo;
+- regex de nome ajustada para nao capturar `Guilherme\nLara` como nome do cliente;
+- fallback de baixa confianca adicionado: quando a resposta vier como "nao entendi", a Lara pergunta de forma objetiva se o cliente quer catalogo, duvida sobre joias ou atendimento presencial;
+- `scripts/lara_workflow_logic_tests.js` atualizado para validar `pre_message_blocks` e o caso do print;
+- `qa/lara_qa_journeys.json` ganhou `JOURNEY-04`, cobrindo saudacao, nome e pedido de agendamento sem reinicio;
+- `scripts/lara_production_readiness.py` deixou de fixar `3` jornadas e passou a exigir que todas as jornadas cadastradas passem.
+
+Validacao executada:
+
+- `node scripts/lara_workflow_logic_tests.js backups/n8n-lara-v9-shadow-state-guard-payload-20260715-022201.json`
+  - Resultado: 17/17 testes passaram.
+- `python3 scripts/lara_n8n_qa_journey.py --ids JOURNEY-04 --delay 14`
+  - Resultado: 1/1 jornada passou.
+  - Execucoes n8n: `4052`, `4053`, `4054`.
+- `python3 scripts/lara_n8n_qa_journey.py --delay 14`
+  - Resultado: 4/4 jornadas passaram.
+  - Execucoes n8n: `4055` a `4066`.
+- `N8N_WORKFLOW_ID=7kXu17NYpsN8Yc65 N8N_WEBHOOK_PATH=whatsapp-inbound-v9-shadow python3 scripts/lara_n8n_qa_smoke.py --all --delay 14`
+  - Resultado: execucoes n8n `4067` a `4088`.
+  - Output real salvo em `qa/lara_actual_outputs.json`.
+- `node scripts/lara_qa_runner.js --actual qa/lara_actual_outputs.json --allow-partial`
+  - Resultado: 22/22 cenarios passaram em `actual_outputs`.
+- `python3 scripts/lara_production_readiness.py`
+  - Resultado: `BLOCKED` apenas por `real_whatsapp_shadow_test`.
+- JSONL knowledge: OK, sem erros de parse.
+- Side effects bloqueados: nenhum no proibido de envio WhatsApp, CRM, agenda ou ROOT save foi executado nas 22 execucoes.
+
+Limite atual:
+
+- Producao nao foi alterada.
+- Promocao segue bloqueada ate teste real no WhatsApp shadow ser aprovado e registrado em `qa/lara_whatsapp_shadow_test.json`.
+
+### Validacoes anteriores complementares
+
 - Criado `scripts/lara_n8n_qa_journey.py` e `qa/lara_qa_journeys.json` para validar jornadas multi-turn com mesmo numero fake e historico QA injetado no shadow.
 - `N8N_WORKFLOW_ID=7kXu17NYpsN8Yc65 N8N_WEBHOOK_PATH=whatsapp-inbound-v9-shadow .venv-langgraph/bin/python scripts/lara_n8n_qa_journey.py --delay 14`
   - Resultado: execucoes n8n `3931` a `3939`.

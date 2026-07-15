@@ -169,8 +169,13 @@ def main() -> int:
     })
     checks.append({
         "name": "multi_turn_journeys",
-        "ok": journey_report.get("passed") == 3 and journey_report.get("failed") == 0,
+        "ok": (
+            journey_report.get("failed") == 0
+            and journey_report.get("passed") == journey_report.get("total_journeys")
+            and int(journey_report.get("total_journeys") or 0) >= 4
+        ),
         "details": {
+            "total_journeys": journey_report.get("total_journeys"),
             "passed": journey_report.get("passed"),
             "failed": journey_report.get("failed"),
             "generated_at": journey_report.get("generated_at"),

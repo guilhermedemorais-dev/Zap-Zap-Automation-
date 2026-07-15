@@ -18,9 +18,11 @@ function flatten(value) {
   if (value.type) parts.push(value.type);
   if (value.action) parts.push(value.action);
   if (Array.isArray(value.message_blocks)) parts.push(...value.message_blocks);
+  if (Array.isArray(value.pre_message_blocks)) parts.push(...value.pre_message_blocks);
   if (value.response) parts.push(value.response);
   parts.push(JSON.stringify(value.crm_context || {}));
   parts.push(JSON.stringify(value.action_args || {}));
+  parts.push(JSON.stringify(value.arguments || {}));
   return parts.join('\n');
 }
 
@@ -57,10 +59,27 @@ async function runParserCase(test) {
     crm_context: {}
   });
   const contextText = test.contextText || 'NO_CONTEXT';
+  const historyText = test.historyText || contextText;
   const $input = { first: () => ({ json: { output: rawOutput } }) };
   const $ = (name) => ({
-    first: () => ({ json: name === 'Get Message' ? { message: test.message } : { text: contextText } }),
-    item: { json: name === 'Get Message' ? { message: test.message } : { text: contextText } }
+    first: () => ({
+      json: name === 'Get Message'
+        ? { message: test.message }
+        : name === 'Get chat_history'
+          ? { history: historyText }
+          : name === 'Get chat_history1'
+            ? { propertyName: historyText.split('\n') }
+            : { text: contextText }
+    }),
+    item: {
+      json: name === 'Get Message'
+        ? { message: test.message }
+        : name === 'Get chat_history'
+          ? { history: historyText }
+          : name === 'Get chat_history1'
+            ? { propertyName: historyText.split('\n') }
+            : { text: contextText }
+    }
   });
   const $items = () => [{ json: { message: test.message, text: contextText } }];
   const output = await fn($input, $, $items);
@@ -93,19 +112,19 @@ async function main() {
     {
       id: 'PARSER-02',
       message: 'Jhonatan',
-      must: ['Perfeito, Jhonatan', 'catálogo de joias', 'atendimento presencial'],
+      must: ['Prazer, Jhonatan', 'catálogo de joias', 'atendimento presencial'],
       mustNot: ['qual é o seu nome', 'Sou a LARA']
     },
     {
       id: 'PARSER-03',
       message: 'jhonatan',
-      must: ['Perfeito, Jhonatan', 'catálogo de joias', 'atendimento presencial'],
+      must: ['Prazer, Jhonatan', 'catálogo de joias', 'atendimento presencial'],
       mustNot: ['qual é o seu nome']
     },
     {
       id: 'PARSER-04',
       message: 'Jhonatam.',
-      must: ['Perfeito, Jhonatam'],
+      must: ['Prazer, Jhonatam'],
       mustNot: ['qual é o seu nome']
     },
     {
@@ -130,7 +149,7 @@ async function main() {
     {
       id: 'PARSER-08',
       message: 'Jhontan',
-      must: ['Perfeito, Jhontan'],
+      must: ['Prazer, Jhontan'],
       mustNot: ['qual é o seu nome']
     },
     {
@@ -148,8 +167,26 @@ async function main() {
     {
       id: 'PARSER-11',
       message: 'mariana souza',
-      must: ['Perfeito, Mariana'],
+      must: ['Prazer, Mariana'],
       mustNot: ['qual é o seu nome']
+    },
+    {
+      id: 'PARSER-16',
+      message: 'Gostaria de agendar um atendimento',
+      historyText: 'Cliente: Guilherme\nLara: Prazer, Guilherme. Me conta o que você está buscando hoje?',
+      rawOutput: JSON.stringify({
+        type: 'response',
+        message_blocks: [
+          'Olá, tudo bem?',
+          'Aqui é a Lara, consultora virtual da ORIN Joias.',
+          'Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?',
+          'Depois disso eu verifico os horários disponíveis para atendimento na loja.'
+        ],
+        delay_seconds: 1,
+        crm_context: {}
+      }),
+      must: ['check_availability', 'Guilherme', 'verificar os horários disponíveis'],
+      mustNot: ['poderia me informar seu nome', 'qual é o seu nome', 'Olá, tudo bem?', 'Guilherme\\nLara']
     },
     {
       id: 'PARSER-12',
