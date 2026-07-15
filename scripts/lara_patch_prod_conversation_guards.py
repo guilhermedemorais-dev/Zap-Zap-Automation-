@@ -78,9 +78,31 @@ function tomorrowSaoPauloDate() {
 const appointmentIntentGuard = /(atendimento\s+presencial|agendar|agenda|visita|horário|horario|marcar|atendimento)/i.test(msg);
 const askedNameAgainGuard = /(?:informar|dizer|me passa|me informe|qual (?:é|e))[^.!?\n]{0,80}\b(?:seu\s+)?nome\b|nome\?/i.test(responseText);
 const confirmedNameGuard = findConfirmedCustomerNameFromRuntime();
+const invalidParsedNameGuard = isInvalidCustomerName(parsed.crm_context?.customer_name || '') ? normalizeNameForGuard(parsed.crm_context?.customer_name || '') : '';
+const responseTreatsInvalidNameGuard = /\b(?:Perfeito|Prazer|Olá|Ola),\s*(Tudo|Tdo|Sim|Ok|Okay|Quero|Gostaria|Meu|Filho)\b/i.test(responseText);
+const likelyNamePromptAnswerWithoutName = (
+  /\b(tudo|tdo|sim|ok|okay|quero|gostaria|pode|claro|meu filho|já disse|ja disse)\b/i.test(msg)
+  && !confirmedNameGuard
+  && !/^\s*(meu nome é|me chamo|sou o|sou a)\s+[A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]/i.test(userMessage)
+);
 
 if (confirmedNameGuard) {
   parsed.crm_context = { ...(parsed.crm_context || {}), customer_name: confirmedNameGuard };
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && !confirmedNameGuard && (invalidParsedNameGuard || responseTreatsInvalidNameGuard || likelyNamePromptAnswerWithoutName)) {
+  return [{
+    json: {
+      type: 'response',
+      message_blocks: [
+        'Ainda não consegui identificar seu nome.',
+        'Me informa seu primeiro nome, por favor?'
+      ],
+      delay_seconds: 1,
+      crm_context: { ...(parsed.crm_context || {}), customer_name: '' },
+      block_reason: 'invalid_or_missing_name_repeat_prompt_guard'
+    }
+  }];
 }
 
 if (parsed.type !== 'action' && parsed.type !== 'handoff' && appointmentIntentGuard && !confirmedNameGuard) {
@@ -191,11 +213,15 @@ def patch_code(js: str) -> str:
         if root_anchor_after_old > old_guard_start:
             js = js[:old_guard_start] + js[root_anchor_after_old:]
 
-    if "missing_valid_name_before_appointment_guard" not in js:
-        anchor = "const rootCommand = /^\\s*\\//.test(msg);"
-        if anchor not in js:
-            raise RuntimeError("conversation guard anchor not found")
-        js = js.replace(anchor, CONVERSATION_GUARD + "\n\n" + anchor, 1)
+    current_guard_start = js.find("function normalizeNameForGuard(value)")
+    current_guard_end = js.find("const rootCommand = /^\\s*\\//.test(msg);", current_guard_start)
+    if current_guard_start >= 0 and current_guard_end > current_guard_start:
+        js = js[:current_guard_start] + js[current_guard_end:]
+
+    anchor = "const rootCommand = /^\\s*\\//.test(msg);"
+    if anchor not in js:
+        raise RuntimeError("conversation guard anchor not found")
+    js = js.replace(anchor, CONVERSATION_GUARD + "\n\n" + anchor, 1)
 
     js = js.replace(
         "'queria','ver','saber','obg','obrigado','obrigada','valeu','beleza','blz'",
