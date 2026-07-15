@@ -33,7 +33,8 @@ function isInvalidCustomerName(value) {
     'tudo', 'tdo', 'sim', 'ok', 'okay', 'quero', 'queria', 'gostaria', 'pode',
     'meu', 'minha', 'filho', 'cara', 'irmao', 'irmão', 'ola', 'olá', 'oi',
     'bom', 'boa', 'noite', 'dia', 'tarde', 'perfeito', 'prazer', 'cliente',
-    'lara', 'orin'
+    'lara', 'orin', 'agendar', 'agenda', 'atendimento', 'presencial', 'loja',
+    'verificar', 'horario', 'horário', 'marcar'
   ]);
   if (!first || invalid.has(normalized)) return true;
   return !/^[A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]{2,30}$/.test(first);
@@ -79,15 +80,38 @@ const appointmentIntentGuard = /(atendimento\s+presencial|agendar|agenda|visita|
 const askedNameAgainGuard = /(?:informar|dizer|me passa|me informe|qual (?:é|e))[^.!?\n]{0,80}\b(?:seu\s+)?nome\b|nome\?/i.test(responseText);
 const confirmedNameGuard = findConfirmedCustomerNameFromRuntime();
 const invalidParsedNameGuard = isInvalidCustomerName(parsed.crm_context?.customer_name || '') ? normalizeNameForGuard(parsed.crm_context?.customer_name || '') : '';
-const responseTreatsInvalidNameGuard = /\b(?:Perfeito|Prazer|Olá|Ola),\s*(Tudo|Tdo|Sim|Ok|Okay|Quero|Gostaria|Meu|Filho)\b/i.test(responseText);
+const responseTreatsInvalidNameGuard = /\b(?:Perfeito|Prazer|Olá|Ola),\s*(Tudo|Tdo|Sim|Ok|Okay|Quero|Gostaria|Meu|Filho|Agendar|Atendimento|Loja|Presencial)\b/i.test(responseText);
 const likelyNamePromptAnswerWithoutName = (
-  /\b(tudo|tdo|sim|ok|okay|quero|gostaria|pode|claro|meu filho|já disse|ja disse)\b/i.test(msg)
+  /\b(tudo|tdo|sim|ok|okay|quero|gostaria|pode|claro|meu filho|já disse|ja disse|agendar|atendimento|presencial|loja)\b/i.test(msg)
   && !confirmedNameGuard
   && !/^\s*(meu nome é|me chamo|sou o|sou a)\s+[A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]/i.test(userMessage)
 );
 
 if (confirmedNameGuard) {
   parsed.crm_context = { ...(parsed.crm_context || {}), customer_name: confirmedNameGuard };
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && confirmedNameGuard && appointmentIntentGuard && (responseTreatsInvalidNameGuard || !askedNameAgainGuard)) {
+  const firstName = formatSingleName(confirmedNameGuard.split(/\s+/)[0]);
+  return [{
+    json: {
+      type: 'action',
+      action: 'check_availability',
+      pre_message_blocks: [
+        `Perfeito, ${firstName}. Vou verificar os horários disponíveis para atendimento presencial.`,
+        'Aguarde um momento, por favor.'
+      ],
+      pre_delay_seconds: 1,
+      arguments: { date: tomorrowSaoPauloDate(), period: 'qualquer' },
+      crm_context: {
+        ...(parsed.crm_context || {}),
+        customer_name: confirmedNameGuard,
+        interesse: parsed.crm_context?.interesse || 'atendimento presencial',
+        visit_reason: parsed.crm_context?.visit_reason || 'atendimento presencial'
+      },
+      block_reason: 'confirmed_name_appointment_intent_guard'
+    }
+  }];
 }
 
 if (parsed.type !== 'action' && parsed.type !== 'handoff' && !confirmedNameGuard && (invalidParsedNameGuard || responseTreatsInvalidNameGuard || likelyNamePromptAnswerWithoutName)) {
@@ -225,7 +249,11 @@ def patch_code(js: str) -> str:
 
     js = js.replace(
         "'queria','ver','saber','obg','obrigado','obrigada','valeu','beleza','blz'",
-        "'queria','ver','saber','obg','obrigado','obrigada','valeu','beleza','blz','tudo','sim','quero','gostaria','pode'",
+        "'queria','ver','saber','obg','obrigado','obrigada','valeu','beleza','blz','tudo','sim','quero','gostaria','pode','agendar','agenda','atendimento','presencial','loja','marcar'",
+    )
+    js = js.replace(
+        "const startsWithNonNamePhrase = /^(oi|olá|ola|bom\\s+dia|boa\\s+tarde|boa\\s+noite|onde|como|qual|quero|queria|gostaria|pode|preciso|tem|voces|vocês|endereco|endereço|localizacao|localização)\\b/i.test(msg);",
+        "const startsWithNonNamePhrase = /^(oi|olá|ola|bom\\s+dia|boa\\s+tarde|boa\\s+noite|onde|como|qual|quero|queria|gostaria|pode|preciso|tem|voces|vocês|endereco|endereço|localizacao|localização|agendar|agenda|atendimento|presencial|loja|marcar|verificar)\\b/i.test(msg);",
     )
     js = js.replace(
         "const asksAddress = /(onde\\s+fica|endereco|endereço|localizacao|localização|maps|mapa|local|loja)/i.test(msg);",
@@ -237,8 +265,12 @@ def patch_code(js: str) -> str:
     )
     js = js.replace(
         "if (parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
-        "if (parsed.type !== 'action' && parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
+        "if (parsed.type !== 'action' && parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && !(typeof confirmedNameGuard !== 'undefined' && confirmedNameGuard) && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
     )
+    js = js.replace("Prazer, ' + firstName + '.'", "Perfeito, ' + firstName + '.'")
+    js = js.replace("Prazer, ", "Perfeito, ")
+    js = js.replace("Qual você prefere?", "Qual opção você prefere?")
+    js = js.replace("mostrar posso catálogo", "mostrar nosso catálogo")
     return js
 
 
