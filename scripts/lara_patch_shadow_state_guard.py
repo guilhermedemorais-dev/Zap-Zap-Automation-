@@ -155,11 +155,15 @@ def patch_parser_code(js: str) -> str:
     if "confirmed_name_from_history_appointment_guard" in js:
         return js
 
-    anchor = "const explicitNamePhrase = userMessage.trim().match"
-    if anchor not in js:
-        raise RuntimeError("Parser insertion anchor not found.")
+    anchors = [
+        "const explicitNamePhrase = userMessage.trim().match",
+        "const rootCommand = /^\\s*\\//.test(msg);",
+    ]
+    for anchor in anchors:
+        if anchor in js:
+            return js.replace(anchor, STATE_GUARD_SNIPPET + "\n\n" + anchor, 1)
 
-    return js.replace(anchor, STATE_GUARD_SNIPPET + "\n\n" + anchor, 1)
+    raise RuntimeError("Parser insertion anchor not found.")
 
 
 def build_payload(workflow: dict) -> dict:

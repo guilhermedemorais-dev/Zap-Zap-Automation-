@@ -9,6 +9,7 @@ A Lara V9 ja esta criada e ativa no n8n remoto como workflow shadow. Ela ainda n
 - Producao atual preservada: `ORION-WF-Bot-v7-LARA-SDR`
 - ID producao: `7SucjAi8zU69sQuT`
 - Webhook producao: `whatsapp-inbound`
+- Hotfix aplicado em producao em 2026-07-15: guard contra reinicio de atendimento apos nome confirmado e pedido de agendamento.
 - Shadow V9 ativo: `LARA V9 Shadow SDR`
 - ID shadow: `7kXu17NYpsN8Yc65`
 - Webhook shadow: `whatsapp-inbound-v9-shadow`
