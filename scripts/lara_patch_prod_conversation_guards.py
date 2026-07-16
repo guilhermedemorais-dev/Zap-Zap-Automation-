@@ -41,17 +41,10 @@ function isInvalidCustomerName(value) {
 }
 
 function findConfirmedCustomerNameFromRuntime() {
-  const rawParts = [contextText || ''];
-  try { rawParts.push(String($('Get chat_history').first().json.history || '')); } catch(e) {}
-  try {
-    const raw = $('Get chat_history1').first().json.propertyName;
-    rawParts.push(Array.isArray(raw) ? raw.join('\n') : String(raw || ''));
-  } catch(e) {}
-
+  const source = runtimeHistoryTextForGuard();
   const parsedName = normalizeNameForGuard(parsed.crm_context?.customer_name || '');
   if (parsedName && !isInvalidCustomerName(parsedName)) return parsedName;
 
-  const source = rawParts.filter(Boolean).join('\n');
   const patterns = [
     /customer_name["']?\s*[:=]\s*["']([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]+(?:[ \t]+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]+){0,3})["']/,
     /\b(?:Client name|Nome do cliente|Cliente|Nome)\s*[:\-]\s*([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]+(?:[ \t]+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]+){0,3})/i,
@@ -64,6 +57,24 @@ function findConfirmedCustomerNameFromRuntime() {
     if (candidate && !isInvalidCustomerName(candidate)) return candidate;
   }
   return '';
+}
+
+function runtimeHistoryTextForGuard() {
+  const rawParts = [contextText || ''];
+  try { rawParts.push(String($('Get chat_history').first().json.history || '')); } catch(e) {}
+  try {
+    const raw = $('Get chat_history1').first().json.propertyName;
+    rawParts.push(Array.isArray(raw) ? raw.join('\n') : String(raw || ''));
+  } catch(e) {}
+  return rawParts.filter(Boolean).join('\n');
+}
+
+function explicitNameFromMessage(value) {
+  const text = normalizeNameForGuard(value);
+  const match = text.match(/^\s*(?:meu\s+nome\s+(?:é|e)|me\s+chamo|sou\s+o|sou\s+a|aqui\s+(?:é|e))\s+([A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]+(?:\s+[A-Za-zÁÀÂÃÉÊÍÓÔÕÚÇáàâãéêíóôõúç]+){0,3})\b/i);
+  if (!match) return '';
+  const candidate = normalizeNameForGuard(match[1]);
+  return candidate && !isInvalidCustomerName(candidate) ? candidate : '';
 }
 
 function tomorrowSaoPauloDate() {
@@ -101,10 +112,38 @@ function selectedAppointmentSlotFromText(value) {
   };
 }
 
+function selectedAppointmentSlotFromHistory(value) {
+  const text = String(value || '').trim();
+  const timeMatch = text.match(/^(?:pode ser\s*)?(?:às|as)?\s*(\d{1,2})(?::(\d{2}))?\s*(?:h|horas)?\s*$/i);
+  if (!timeMatch) return null;
+  const hour = String(Number(timeMatch[1])).padStart(2, '0');
+  const minute = timeMatch[2] ? String(Number(timeMatch[2])).padStart(2, '0') : '00';
+  const desiredTime = `${hour}:${minute}`;
+  const source = runtimeHistoryTextForGuard();
+  const slotPattern = /\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*(?:[-–—]|às|as)?\s*(\d{1,2})(?::(\d{2}))?\b/gi;
+  let match;
+  while ((match = slotPattern.exec(source))) {
+    const slotHour = String(Number(match[4])).padStart(2, '0');
+    const slotMinute = match[5] ? String(Number(match[5])).padStart(2, '0') : '00';
+    if (`${slotHour}:${slotMinute}` !== desiredTime) continue;
+    return selectedAppointmentSlotFromText(`${match[1]}/${match[2]}${match[3] ? '/' + match[3] : ''} - ${desiredTime}`);
+  }
+  return null;
+}
+
 const appointmentIntentGuard = /(atendimento\s+presencial|agendar|agenda|visita|horário|horario|marcar|atendimento)/i.test(msg);
 const askedNameAgainGuard = /(?:informar|dizer|me passa|me informe|qual (?:é|e))[^.!?\n]{0,80}\b(?:seu\s+)?nome\b|nome\?/i.test(responseText);
+const historyTextGuard = runtimeHistoryTextForGuard();
 const confirmedNameGuard = findConfirmedCustomerNameFromRuntime();
-const selectedSlotGuard = selectedAppointmentSlotFromText(userMessage);
+const explicitNameGuard = explicitNameFromMessage(userMessage);
+const selectedSlotGuard = selectedAppointmentSlotFromText(userMessage) || selectedAppointmentSlotFromHistory(userMessage);
+const askedForNameStageGuard = /(?:informar|dizer|me passa|me informe|qual (?:é|e))[^.!?\n]{0,80}\b(?:seu\s+)?nome\b|nome\?/i.test(historyTextGuard);
+const offeredOptionsStageGuard = /(cat[aá]logo[\s\S]{0,160}atendimento presencial|Qual op[cç][aã]o voc[eê] prefere\?)/i.test(historyTextGuard);
+const availabilityListedStageGuard = /(Tenho estes hor[aá]rios dispon[ií]veis|Qual desses hor[aá]rios funciona melhor)/i.test(historyTextGuard);
+const askedVisitReasonStageGuard = /(motivo da visita|pe[cç]a que voc[eê] quer ver|assunto voc[eê] gostaria de tratar)/i.test(historyTextGuard);
+const positiveShortAnswerGuard = /^(sim|ok|okay|pode|claro|isso|confirmo|perfeito|ta bom|tá bom|beleza|blz)$/i.test(msg);
+const appointmentChoiceGuard = /(presencial|loja|atendimento|agenda|agendar|visita|marcar|hor[aá]rio|horario)/i.test(msg) || (offeredOptionsStageGuard && positiveShortAnswerGuard);
+const usefulVisitReasonGuard = askedVisitReasonStageGuard && words(userMessage).length >= 3 && !selectedSlotGuard && !appointmentChoiceGuard;
 const invalidParsedNameGuard = isInvalidCustomerName(parsed.crm_context?.customer_name || '') ? normalizeNameForGuard(parsed.crm_context?.customer_name || '') : '';
 const responseTreatsInvalidNameGuard = /\b(?:Perfeito|Prazer|Olá|Ola),\s*(Tudo|Tdo|Sim|Ok|Okay|Quero|Gostaria|Meu|Filho|Agendar|Atendimento|Loja|Presencial)\b/i.test(responseText);
 const likelyNamePromptAnswerWithoutName = (
@@ -115,6 +154,23 @@ const likelyNamePromptAnswerWithoutName = (
 
 if (confirmedNameGuard) {
   parsed.crm_context = { ...(parsed.crm_context || {}), customer_name: confirmedNameGuard };
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && explicitNameGuard) {
+  const firstName = formatSingleName(explicitNameGuard.split(/\s+/)[0]);
+  return [{
+    json: {
+      type: 'response',
+      message_blocks: [
+        `Perfeito, ${firstName}.`,
+        'Me conta o que você está buscando hoje?',
+        'Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual opção você prefere?'
+      ],
+      delay_seconds: 1,
+      crm_context: { ...(parsed.crm_context || {}), customer_name: explicitNameGuard },
+      block_reason: 'explicit_name_phrase_guard'
+    }
+  }];
 }
 
 if (parsed.type !== 'action' && parsed.type !== 'handoff' && selectedSlotGuard) {
@@ -155,6 +211,66 @@ if (parsed.type !== 'action' && parsed.type !== 'handoff' && selectedSlotGuard) 
         customer_name: confirmedNameGuard
       },
       block_reason: 'selected_slot_after_availability_guard'
+    }
+  }];
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && confirmedNameGuard && appointmentChoiceGuard) {
+  const firstName = formatSingleName(confirmedNameGuard.split(/\s+/)[0]);
+  return [{
+    json: {
+      type: 'action',
+      action: 'check_availability',
+      pre_message_blocks: [
+        `Perfeito, ${firstName}. Vou verificar os horários disponíveis para atendimento presencial.`,
+        'Aguarde um momento, por favor.'
+      ],
+      pre_delay_seconds: 1,
+      arguments: { date: tomorrowSaoPauloDate(), period: 'qualquer' },
+      crm_context: {
+        ...(parsed.crm_context || {}),
+        customer_name: confirmedNameGuard,
+        interesse: parsed.crm_context?.interesse || 'atendimento presencial',
+        visit_reason: parsed.crm_context?.visit_reason || 'atendimento presencial'
+      },
+      block_reason: 'confirmed_name_appointment_choice_guard'
+    }
+  }];
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && confirmedNameGuard && usefulVisitReasonGuard) {
+  const firstName = formatSingleName(confirmedNameGuard.split(/\s+/)[0]);
+  return [{
+    json: {
+      type: 'response',
+      message_blocks: [
+        `Perfeito, ${firstName}. Anotei essas informações para o atendimento.`,
+        'Para registrar certinho, me passa seu nome completo e e-mail?',
+        'Também confirma se este WhatsApp é o melhor número para contato?'
+      ],
+      delay_seconds: 1,
+      crm_context: {
+        ...(parsed.crm_context || {}),
+        customer_name: confirmedNameGuard,
+        visit_reason: userMessage,
+        summary_for_human: userMessage
+      },
+      block_reason: 'visit_reason_collected_guard'
+    }
+  }];
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && !confirmedNameGuard && (availabilityListedStageGuard || askedVisitReasonStageGuard || offeredOptionsStageGuard) && !explicitNameGuard) {
+  return [{
+    json: {
+      type: 'response',
+      message_blocks: [
+        'Antes de seguir, preciso confirmar seu nome.',
+        'Me informa seu primeiro nome, por favor?'
+      ],
+      delay_seconds: 1,
+      crm_context: { ...(parsed.crm_context || {}), customer_name: '' },
+      block_reason: 'active_stage_missing_name_guard'
     }
   }];
 }
@@ -332,8 +448,16 @@ def patch_code(js: str) -> str:
         "visit_reason: visitReason,\n    customer_name: clean(args.customer_name || source.customer_name || source.nome || source.name),\n    customer_email: clean(args.customer_email || args.email || source.customer_email || source.email),\n    email: clean(args.email || source.email || source.customer_email)\n  };",
     )
     js = js.replace(
+        "if (looksLikeOnlyTime && !hasExplicitDay) {\n  return responseAsk(\"Consigo seguir com esse horário, sim. Me confirma o dia, seu nome completo e o motivo da visita?\");\n}\n\n",
+        "const timeOnlyCandidateGuard = looksLikeOnlyTime && !hasExplicitDay;\n\n",
+    )
+    js = js.replace(
         "if (parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
         "if (parsed.type !== 'action' && parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && !(typeof confirmedNameGuard !== 'undefined' && confirmedNameGuard) && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
+    )
+    js = js.replace(
+        "if (parsed.type !== 'action' && parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
+        "if (parsed.type !== 'action' && parsed.type !== 'handoff' && !userAlreadyGaveName && !hasConfirmedNameInContext && !(typeof confirmedNameGuard !== 'undefined' && confirmedNameGuard) && !(typeof selectedSlotGuard !== 'undefined' && selectedSlotGuard) && !(typeof offeredOptionsStageGuard !== 'undefined' && offeredOptionsStageGuard) && !(typeof availabilityListedStageGuard !== 'undefined' && availabilityListedStageGuard) && !(typeof askedVisitReasonStageGuard !== 'undefined' && askedVisitReasonStageGuard) && (noRelevantContext || hasCommercialIntent || startsWithGreeting || msg.length <= 40) && !rootCommand) {",
     )
     js = js.replace("Prazer, ' + firstName + '.'", "Perfeito, ' + firstName + '.'")
     js = js.replace("Prazer, ", "Perfeito, ")
