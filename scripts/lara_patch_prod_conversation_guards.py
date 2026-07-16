@@ -76,9 +76,35 @@ function tomorrowSaoPauloDate() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function selectedAppointmentSlotFromText(value) {
+  const text = String(value || '');
+  const match = text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*(?:[-–—]|às|as)?\s*(\d{1,2})(?::(\d{2}))?\b/i);
+  if (!match) return null;
+
+  const now = new Date();
+  const spNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  let year = match[3] ? Number(match[3]) : spNow.getFullYear();
+  if (year < 100) year += 2000;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const hour = Number(match[4]);
+  const minute = match[5] ? Number(match[5]) : 0;
+  if (day < 1 || day > 31 || month < 1 || month > 12 || hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+
+  const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  return {
+    date,
+    time,
+    label: `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')} - ${time}`
+  };
+}
+
 const appointmentIntentGuard = /(atendimento\s+presencial|agendar|agenda|visita|horário|horario|marcar|atendimento)/i.test(msg);
 const askedNameAgainGuard = /(?:informar|dizer|me passa|me informe|qual (?:é|e))[^.!?\n]{0,80}\b(?:seu\s+)?nome\b|nome\?/i.test(responseText);
 const confirmedNameGuard = findConfirmedCustomerNameFromRuntime();
+const selectedSlotGuard = selectedAppointmentSlotFromText(userMessage);
 const invalidParsedNameGuard = isInvalidCustomerName(parsed.crm_context?.customer_name || '') ? normalizeNameForGuard(parsed.crm_context?.customer_name || '') : '';
 const responseTreatsInvalidNameGuard = /\b(?:Perfeito|Prazer|Olá|Ola),\s*(Tudo|Tdo|Sim|Ok|Okay|Quero|Gostaria|Meu|Filho|Agendar|Atendimento|Loja|Presencial)\b/i.test(responseText);
 const likelyNamePromptAnswerWithoutName = (
@@ -89,6 +115,48 @@ const likelyNamePromptAnswerWithoutName = (
 
 if (confirmedNameGuard) {
   parsed.crm_context = { ...(parsed.crm_context || {}), customer_name: confirmedNameGuard };
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && selectedSlotGuard) {
+  const baseContext = {
+    ...(parsed.crm_context || {}),
+    selected_date: selectedSlotGuard.date,
+    selected_time: selectedSlotGuard.time,
+    requested_slot_label: selectedSlotGuard.label,
+    interesse: parsed.crm_context?.interesse || 'atendimento presencial'
+  };
+
+  if (!confirmedNameGuard) {
+    return [{
+      json: {
+        type: 'response',
+        message_blocks: [
+          `Perfeito, consigo seguir com o horário ${selectedSlotGuard.label}.`,
+          'Antes de registrar, me informa seu nome, por favor?'
+        ],
+        delay_seconds: 1,
+        crm_context: { ...baseContext, customer_name: '' },
+        block_reason: 'selected_slot_missing_name_guard'
+      }
+    }];
+  }
+
+  const firstName = formatSingleName(confirmedNameGuard.split(/\s+/)[0]);
+  return [{
+    json: {
+      type: 'response',
+      message_blocks: [
+        `Perfeito, ${firstName}. Consigo seguir com o horário ${selectedSlotGuard.label}.`,
+        'Para deixar o atendimento mais assertivo, me conta o motivo da visita ou a peça que você quer ver na loja?'
+      ],
+      delay_seconds: 1,
+      crm_context: {
+        ...baseContext,
+        customer_name: confirmedNameGuard
+      },
+      block_reason: 'selected_slot_after_availability_guard'
+    }
+  }];
 }
 
 if (parsed.type !== 'action' && parsed.type !== 'handoff' && confirmedNameGuard && appointmentIntentGuard && (responseTreatsInvalidNameGuard || !askedNameAgainGuard)) {
