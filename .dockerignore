@@ -1,0 +1,10 @@
+.git
+.venv
+.venv-langgraph
+__pycache__
+*.pyc
+backups
+qa
+catalogo
+knowledge
+reference-repos

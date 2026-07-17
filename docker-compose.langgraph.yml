@@ -1,0 +1,15 @@
+services:
+  lara-langgraph:
+    container_name: lara-langgraph
+    build:
+      context: .
+      dockerfile: Dockerfile.langgraph
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - orion-crm_app_network_v2
+
+networks:
+  orion-crm_app_network_v2:
+    external: true
