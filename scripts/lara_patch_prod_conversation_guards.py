@@ -144,6 +144,7 @@ const askedVisitReasonStageGuard = /(motivo da visita|pe[cç]a que voc[eê] quer
 const positiveShortAnswerGuard = /^(sim|ok|okay|pode|claro|isso|confirmo|perfeito|ta bom|tá bom|beleza|blz)$/i.test(msg);
 const appointmentChoiceGuard = /(presencial|loja|atendimento|agenda|agendar|visita|marcar|hor[aá]rio|horario)/i.test(msg) || (offeredOptionsStageGuard && positiveShortAnswerGuard);
 const usefulVisitReasonGuard = askedVisitReasonStageGuard && words(userMessage).length >= 3 && !selectedSlotGuard && !appointmentChoiceGuard;
+const openingGreetingNeedsNameGuard = startsWithGreeting && !confirmedNameGuard && !explicitNameGuard && !selectedSlotGuard && !appointmentChoiceGuard && !offeredOptionsStageGuard && !availabilityListedStageGuard && !askedVisitReasonStageGuard && !/^\s*\//.test(userMessage);
 const invalidParsedNameGuard = isInvalidCustomerName(parsed.crm_context?.customer_name || '') ? normalizeNameForGuard(parsed.crm_context?.customer_name || '') : '';
 const responseTreatsInvalidNameGuard = /\b(?:Perfeito|Prazer|Olá|Ola),\s*(Tudo|Tdo|Sim|Ok|Okay|Quero|Gostaria|Meu|Filho|Agendar|Atendimento|Loja|Presencial)\b/i.test(responseText);
 const likelyNamePromptAnswerWithoutName = (
@@ -154,6 +155,18 @@ const likelyNamePromptAnswerWithoutName = (
 
 if (confirmedNameGuard) {
   parsed.crm_context = { ...(parsed.crm_context || {}), customer_name: confirmedNameGuard };
+}
+
+if (parsed.type !== 'action' && parsed.type !== 'handoff' && openingGreetingNeedsNameGuard) {
+  return [{
+    json: {
+      type: 'response',
+      message_blocks: greetingOpeningBlocks(userMessage),
+      delay_seconds: 1,
+      crm_context: { ...(parsed.crm_context || {}), customer_name: '' },
+      block_reason: 'deterministic_opening_name_guard'
+    }
+  }];
 }
 
 if (parsed.type !== 'action' && parsed.type !== 'handoff' && explicitNameGuard) {
