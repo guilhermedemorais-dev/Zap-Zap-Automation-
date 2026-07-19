@@ -158,7 +158,7 @@ def _supervisor(state: LaraGraphState) -> LaraGraphState:
         state["route"] = "human_takeover"
         return state
 
-    if current in {"agenda_slots", "agenda_contexto", "agenda_resumo_confirmacao", "agenda_criar"}:
+    if current in {"agenda_slots", "agenda_contexto", "agenda_contato", "agenda_resumo_confirmacao", "agenda_criar"}:
         state["route"] = "appointment"
         return state
 
@@ -250,6 +250,8 @@ def _appointment(state: LaraGraphState) -> LaraGraphState:
         return _handle_slot_selection(state)
     if stage == "agenda_contexto":
         return _collect_appointment_reason(state)
+    if stage == "agenda_contato":
+        return _collect_contact_details(state)
     if stage == "agenda_resumo_confirmacao":
         return _confirm_appointment(state)
     return _start_appointment(state)
@@ -331,16 +333,80 @@ def _collect_appointment_reason(state: LaraGraphState) -> LaraGraphState:
     context = state["state"].setdefault("collected_context", {})
     context["appointment_reason"] = raw
     context["interest"] = _infer_interest(state["normalized_message"])
+    state["intent"] = "appointment"
+    state["crm_note"] = _build_crm_note(state["state"])
+
+    if not _has_useful_reason(raw):
+        state["state"]["conversation_stage"] = "agenda_contexto"
+        state["conversation_stage"] = "agenda_contexto"
+        state["reply_blocks"] = [
+            "Entendi.",
+            "Para preparar melhor seu atendimento, me conta mais detalhes do que você quer ver ou resolver na loja?",
+        ]
+        state["next_action"] = "reply"
+        state["missing_fields"] = ["appointment_reason"]
+        return state
+
+    if context.get("customer_email") and context.get("phone_confirmed") is True:
+        return _ask_appointment_confirmation(state)
+
+    return _ask_contact_details(state)
+
+
+def _ask_contact_details(state: LaraGraphState) -> LaraGraphState:
+    context = state["state"].setdefault("collected_context", {})
+    state["state"]["conversation_stage"] = "agenda_contato"
+    state["intent"] = "appointment"
+    state["conversation_stage"] = "agenda_contato"
+    state["reply_blocks"] = [
+        _warm_acknowledgement(context["interest"]),
+        "Para deixar o cadastro certinho, me passa seu e-mail e confirma se este WhatsApp é o melhor número para contato?",
+    ]
+    state["next_action"] = "reply"
+    state["missing_fields"] = ["customer_email", "phone_confirmed"]
+    return state
+
+
+def _collect_contact_details(state: LaraGraphState) -> LaraGraphState:
+    context = state["state"].setdefault("collected_context", {})
+    email = _extract_email(state["message"])
+    if email:
+        context["customer_email"] = email
+    if _phone_confirmed(state["normalized_message"]):
+        context["phone_confirmed"] = True
+
+    state["intent"] = "appointment"
+    if not context.get("customer_email"):
+        state["state"]["conversation_stage"] = "agenda_contato"
+        state["conversation_stage"] = "agenda_contato"
+        state["reply_blocks"] = ["Perfeito. Só falta o seu e-mail para eu deixar o cadastro completo."]
+        state["next_action"] = "reply"
+        state["missing_fields"] = ["customer_email"]
+        return state
+
+    if context.get("phone_confirmed") is not True:
+        state["state"]["conversation_stage"] = "agenda_contato"
+        state["conversation_stage"] = "agenda_contato"
+        state["reply_blocks"] = ["Obrigada. Este WhatsApp é o melhor número para contato?"]
+        state["next_action"] = "reply"
+        state["missing_fields"] = ["phone_confirmed"]
+        return state
+
+    return _ask_appointment_confirmation(state)
+
+
+def _ask_appointment_confirmation(state: LaraGraphState) -> LaraGraphState:
+    context = state["state"].setdefault("collected_context", {})
+    pending = state["state"].get("pending_booking") or {}
+    name = state["state"].get("confirmed_name") or "cliente"
+    reason = context.get("appointment_reason") or "atendimento na loja"
     state["state"]["conversation_stage"] = "agenda_resumo_confirmacao"
     state["intent"] = "appointment"
     state["conversation_stage"] = "agenda_resumo_confirmacao"
     state["crm_note"] = _build_crm_note(state["state"])
-
-    pending = state["state"].get("pending_booking") or {}
-    name = state["state"].get("confirmed_name") or "cliente"
     state["reply_blocks"] = [
-        _warm_acknowledgement(context["interest"]),
-        f"Perfeito, {name}. Para confirmar: seu atendimento fica para {pending.get('label') or pending.get('date')} às {pending.get('time')}, e o assunto é {raw}.",
+        f"Perfeito, {name}. Para confirmar: seu atendimento fica para {pending.get('label') or pending.get('date')} às {pending.get('time')}.",
+        f"Assunto do atendimento: {reason}.",
         "Confirma para mim se é isso mesmo?",
     ]
     state["next_action"] = "reply"
@@ -355,6 +421,8 @@ def _confirm_appointment(state: LaraGraphState) -> LaraGraphState:
 
     pending = state["state"].get("pending_booking") or {}
     context = state["state"].get("collected_context") or {}
+    if not context.get("customer_email") or context.get("phone_confirmed") is not True:
+        return _ask_contact_details(state)
     name = state["state"].get("confirmed_name")
     notes = _build_crm_note(state["state"])
     state["state"]["conversation_stage"] = "agenda_criar"
@@ -369,6 +437,8 @@ def _confirm_appointment(state: LaraGraphState) -> LaraGraphState:
             "phone": state["state"].get("phone") or state.get("phone"),
             "date": pending.get("date"),
             "time": pending.get("time"),
+            "email": context.get("customer_email"),
+            "phone_confirmed": context.get("phone_confirmed") is True,
             "reason": context.get("appointment_reason"),
             "interest": context.get("interest"),
             "notes": notes,
@@ -376,9 +446,8 @@ def _confirm_appointment(state: LaraGraphState) -> LaraGraphState:
     }
     state["crm_note"] = notes
     state["reply_blocks"] = [
-        "Prontinho, vou registrar seu agendamento agora.",
-        f"Endereço da loja: {STORE_ADDRESS}.",
-        f"Google Maps: {STORE_MAPS_URL}",
+        "Perfeito, vou registrar seu agendamento agora.",
+        "Aguarde só 3 segundos, por favor.",
     ]
     state["missing_fields"] = []
     return state
@@ -504,6 +573,41 @@ def _match_slot(text: str, slots: list[dict[str, str]]) -> dict[str, str] | None
     return None
 
 
+def _has_useful_reason(value: str) -> bool:
+    text = _normalize_text(value)
+    words = [word for word in re.split(r"\s+", text) if len(word) >= 2]
+    if len(words) < 3:
+        return False
+    useful_terms = (
+        "alianca",
+        "anel",
+        "noivado",
+        "casamento",
+        "personaliz",
+        "gravacao",
+        "presente",
+        "brinco",
+        "colar",
+        "formatura",
+        "joia",
+    )
+    return _has_any(text, useful_terms) or len(words) >= 5
+
+
+def _extract_email(value: str) -> str | None:
+    match = re.search(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+", value)
+    return match.group(0).lower() if match else None
+
+
+def _phone_confirmed(text: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(sim|isso|correto|certo|confirmo|pode ser|esse whatsapp|este whatsapp|mesmo numero|mesmo número)\b",
+            text,
+        )
+    )
+
+
 def _next_business_date() -> str:
     sao_paulo = timezone(timedelta(hours=-3))
     target = datetime.now(sao_paulo).date() + timedelta(days=1)
@@ -535,11 +639,13 @@ def _build_crm_note(state: dict[str, Any]) -> str:
     pending = state.get("pending_booking") or {}
     parts = [
         f"Cliente: {state.get('confirmed_name')}",
+        f"E-mail: {context.get('customer_email')}",
+        "WhatsApp confirmado: sim" if context.get("phone_confirmed") is True else "",
         f"Interesse: {context.get('interest')}",
         f"Motivo: {context.get('appointment_reason')}",
         f"Agenda: {pending.get('date')} {pending.get('time')}",
     ]
-    return " | ".join(part for part in parts if not part.endswith("None"))
+    return " | ".join(part for part in parts if part and not part.endswith("None"))
 
 
 def _is_confirmation(text: str) -> bool:

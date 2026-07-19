@@ -112,7 +112,7 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertEqual(result["state"]["pending_booking"]["time"], "10:00")
         self.assertIn("motivo", "\n".join(result["reply_blocks"]).lower())
 
-    def test_reason_collects_details_and_asks_confirmation_before_create(self):
+    def test_reason_collects_details_and_asks_contact_before_confirmation(self):
         state = {
             "conversation_stage": "agenda_contexto",
             "confirmed_name": "Camila",
@@ -122,10 +122,63 @@ class LaraLangGraphTest(unittest.TestCase):
 
         result = run_turn("quero ver alianças de casamento com gravação", state)
 
-        self.assertEqual(result["conversation_stage"], "agenda_resumo_confirmacao")
+        self.assertEqual(result["conversation_stage"], "agenda_contato")
         self.assertEqual(result["next_action"], "reply")
         self.assertIn("alianças de casamento", result["state"]["collected_context"]["appointment_reason"])
-        self.assertIn("confirma", "\n".join(result["reply_blocks"]).lower())
+        self.assertIn("e-mail", "\n".join(result["reply_blocks"]).lower())
+
+    def test_vague_appointment_reason_asks_for_more_context(self):
+        state = {
+            "conversation_stage": "agenda_contexto",
+            "confirmed_name": "Camila",
+            "phone": "+5547999990000",
+            "pending_booking": {"date": "2026-07-03", "label": "03/07", "time": "10:00"},
+        }
+
+        result = run_turn("anel", state)
+
+        self.assertEqual(result["conversation_stage"], "agenda_contexto")
+        self.assertEqual(result["next_action"], "reply")
+        self.assertIn("detalhe", "\n".join(result["reply_blocks"]).lower())
+        self.assertNotEqual(result["next_action"], "create_appointment")
+
+    def test_reason_then_contact_details_before_confirmation(self):
+        state = {
+            "conversation_stage": "agenda_contexto",
+            "confirmed_name": "Camila",
+            "phone": "+5547999990000",
+            "pending_booking": {"date": "2026-07-03", "label": "03/07", "time": "10:00"},
+        }
+
+        reason = run_turn("quero ver alianças de casamento com gravação interna", state)
+        contact = run_turn("meu email é camila@example.com e esse WhatsApp está correto", reason["state"])
+
+        self.assertEqual(reason["conversation_stage"], "agenda_contato")
+        self.assertIn("e-mail", "\n".join(reason["reply_blocks"]).lower())
+        self.assertEqual(contact["conversation_stage"], "agenda_resumo_confirmacao")
+        self.assertEqual(contact["next_action"], "reply")
+        self.assertEqual(contact["state"]["collected_context"]["customer_email"], "camila@example.com")
+        self.assertTrue(contact["state"]["collected_context"]["phone_confirmed"])
+        self.assertIn("confirma", "\n".join(contact["reply_blocks"]).lower())
+
+    def test_contact_stage_requires_email_before_confirmation(self):
+        state = {
+            "conversation_stage": "agenda_contato",
+            "confirmed_name": "Camila",
+            "phone": "+5547999990000",
+            "pending_booking": {"date": "2026-07-03", "label": "03/07", "time": "10:00"},
+            "collected_context": {
+                "appointment_reason": "alianças de casamento com gravação interna",
+                "interest": "alianças de casamento",
+            },
+        }
+
+        result = run_turn("sim, esse WhatsApp está correto", state)
+
+        self.assertEqual(result["conversation_stage"], "agenda_contato")
+        self.assertEqual(result["next_action"], "reply")
+        self.assertIn("e-mail", "\n".join(result["reply_blocks"]).lower())
+        self.assertNotEqual(result["next_action"], "create_appointment")
 
     def test_confirmation_creates_appointment_payload_and_uses_correct_address(self):
         state = {
@@ -136,6 +189,8 @@ class LaraLangGraphTest(unittest.TestCase):
             "collected_context": {
                 "appointment_reason": "alianças de casamento com gravação",
                 "interest": "alianças de casamento",
+                "customer_email": "camila@example.com",
+                "phone_confirmed": True,
             },
         }
 
@@ -144,8 +199,87 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertEqual(result["conversation_stage"], "agenda_criar")
         self.assertEqual(result["next_action"], "create_appointment")
         self.assertEqual(result["tool_payload"]["appointment"]["time"], "10:00")
+        self.assertEqual(result["tool_payload"]["appointment"]["email"], "camila@example.com")
+        self.assertTrue(result["tool_payload"]["appointment"]["phone_confirmed"])
         self.assertIn("alianças de casamento", result["tool_payload"]["appointment"]["notes"])
-        self.assertIn("Av. Brasil, 1500", "\n".join(result["reply_blocks"]))
+        self.assertIn("E-mail: camila@example.com", result["tool_payload"]["appointment"]["notes"])
+        self.assertIn("WhatsApp confirmado: sim", result["tool_payload"]["appointment"]["notes"])
+        self.assertNotIn("Av. Brasil, 1500", "\n".join(result["reply_blocks"]))
+
+    def test_full_appointment_journey_keeps_context_until_create_payload(self):
+        first = run_turn("Boa noite")
+        self.assertEqual(first["conversation_stage"], "identificacao")
+        self.assertIsNone(first["state"].get("confirmed_name"))
+
+        named = run_turn("Guilherme", first["state"])
+        self.assertEqual(named["conversation_stage"], "descoberta")
+        self.assertEqual(named["state"]["confirmed_name"], "Guilherme")
+
+        request = run_turn("Queria agendar um atendimento na loja", named["state"])
+        self.assertEqual(request["next_action"], "check_availability")
+        self.assertEqual(request["conversation_stage"], "agenda_slots")
+
+        slots = [
+            {"date": "2026-07-27", "label": "27/07 - 09:00", "time": "09:00"},
+            {"date": "2026-07-27", "label": "27/07 - 10:00", "time": "10:00"},
+            {"date": "2026-07-27", "label": "27/07 - 11:00", "time": "11:00"},
+        ]
+        listed = run_turn("retorno crm", request["state"], available_slots=slots)
+        self.assertEqual(listed["conversation_stage"], "agenda_slots")
+        self.assertIn("27/07 - 10:00", "\n".join(listed["reply_blocks"]))
+
+        selected = run_turn("10 horas está ótimo", listed["state"])
+        self.assertEqual(selected["conversation_stage"], "agenda_contexto")
+        self.assertIn("motivo", "\n".join(selected["reply_blocks"]).lower())
+
+        vague = run_turn("anel", selected["state"])
+        self.assertEqual(vague["conversation_stage"], "agenda_contexto")
+        self.assertIn("detalhes", "\n".join(vague["reply_blocks"]).lower())
+
+        reason = run_turn("quero ver alianças de casamento com gravação interna", vague["state"])
+        self.assertEqual(reason["conversation_stage"], "agenda_contato")
+        self.assertIn("e-mail", "\n".join(reason["reply_blocks"]).lower())
+
+        contact = run_turn("guilherme@example.com, esse WhatsApp está correto", reason["state"])
+        self.assertEqual(contact["conversation_stage"], "agenda_resumo_confirmacao")
+        summary_text = "\n".join(contact["reply_blocks"])
+        self.assertIn("Guilherme", summary_text)
+        self.assertIn("27/07 - 10:00", summary_text)
+        self.assertIn("alianças de casamento", summary_text)
+
+        create = run_turn("confirmado", contact["state"])
+        payload = create["tool_payload"]["appointment"]
+        self.assertEqual(create["next_action"], "create_appointment")
+        self.assertEqual(payload["name"], "Guilherme")
+        self.assertEqual(payload["date"], "2026-07-27")
+        self.assertEqual(payload["time"], "10:00")
+        self.assertEqual(payload["email"], "guilherme@example.com")
+        self.assertIn("alianças de casamento", payload["notes"])
+        self.assertNotIn("Olá, tudo bem?", "\n".join(create["reply_blocks"]))
+        self.assertNotIn("Av. Brasil, 1500", "\n".join(create["reply_blocks"]))
+
+    def test_confirmation_correction_keeps_contact_data_and_resummarizes(self):
+        state = {
+            "conversation_stage": "agenda_resumo_confirmacao",
+            "confirmed_name": "Camila",
+            "phone": "+5547999990000",
+            "pending_booking": {"date": "2026-07-03", "label": "03/07", "time": "10:00"},
+            "collected_context": {
+                "appointment_reason": "alianças de casamento",
+                "interest": "alianças de casamento",
+                "customer_email": "camila@example.com",
+                "phone_confirmed": True,
+            },
+        }
+
+        result = run_turn("quero acrescentar gravação interna com nossos nomes", state)
+
+        self.assertEqual(result["conversation_stage"], "agenda_resumo_confirmacao")
+        self.assertEqual(result["next_action"], "reply")
+        self.assertEqual(result["state"]["collected_context"]["customer_email"], "camila@example.com")
+        self.assertTrue(result["state"]["collected_context"]["phone_confirmed"])
+        self.assertIn("gravação interna", "\n".join(result["reply_blocks"]).lower())
+        self.assertNotIn("e-mail", "\n".join(result["reply_blocks"]).lower())
 
     def test_qa_mode_never_authorizes_real_side_effects(self):
         state = {
@@ -156,6 +290,8 @@ class LaraLangGraphTest(unittest.TestCase):
             "collected_context": {
                 "appointment_reason": "alianças de casamento com gravação",
                 "interest": "alianças de casamento",
+                "customer_email": "camila@example.com",
+                "phone_confirmed": True,
             },
         }
 
