@@ -242,6 +242,8 @@ def _catalog_info(state: LaraGraphState) -> LaraGraphState:
 
 def _appointment(state: LaraGraphState) -> LaraGraphState:
     stage = state["state"].get("conversation_stage")
+    if state.get("available_slots"):
+        return _show_available_slots(state)
 
     if stage == "agenda_slots":
         return _handle_slot_selection(state)
@@ -250,6 +252,22 @@ def _appointment(state: LaraGraphState) -> LaraGraphState:
     if stage == "agenda_resumo_confirmacao":
         return _confirm_appointment(state)
     return _start_appointment(state)
+
+
+def _show_available_slots(state: LaraGraphState) -> LaraGraphState:
+    slots = list(state.get("available_slots") or [])
+    state["intent"] = "appointment"
+    state["conversation_stage"] = "agenda_slots"
+    state["state"]["conversation_stage"] = "agenda_slots"
+    state["state"]["last_offered_slots"] = slots
+    state["reply_blocks"] = [
+        "Tenho estes horários disponíveis:",
+        *_format_slots(slots),
+        "Qual desses horários funciona melhor para você?",
+    ]
+    state["next_action"] = "reply"
+    state["missing_fields"] = ["selected_slot"]
+    return state
 
 
 def _start_appointment(state: LaraGraphState) -> LaraGraphState:
@@ -453,7 +471,18 @@ def _greeting_for(text: str) -> str:
 
 
 def _format_slots(slots: list[dict[str, str]]) -> list[str]:
-    return [f"{slot.get('label') or slot.get('date')} - {slot.get('time')}" for slot in slots]
+    formatted: list[str] = []
+    for slot in slots:
+        label = str(slot.get("label") or "").strip()
+        time = str(slot.get("time") or "").strip()
+        date = str(slot.get("date") or "").strip()
+        if label and (not time or time in label):
+            formatted.append(label)
+        elif label:
+            formatted.append(f"{label} - {time}")
+        else:
+            formatted.append(f"{date} - {time}".strip(" -"))
+    return formatted
 
 
 def _match_slot(text: str, slots: list[dict[str, str]]) -> dict[str, str] | None:
