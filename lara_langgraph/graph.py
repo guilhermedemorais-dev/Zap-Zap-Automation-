@@ -158,7 +158,15 @@ def _supervisor(state: LaraGraphState) -> LaraGraphState:
         state["route"] = "human_takeover"
         return state
 
-    if current in {"agenda_slots", "agenda_contexto", "agenda_contato", "agenda_resumo_confirmacao", "agenda_criar"}:
+    if current in {
+        "agenda_slots",
+        "agenda_contexto",
+        "agenda_detalhes",
+        "agenda_tipo_joia",
+        "agenda_contato",
+        "agenda_resumo_confirmacao",
+        "agenda_criar",
+    }:
         state["route"] = "appointment"
         return state
 
@@ -250,6 +258,10 @@ def _appointment(state: LaraGraphState) -> LaraGraphState:
         return _handle_slot_selection(state)
     if stage == "agenda_contexto":
         return _collect_appointment_reason(state)
+    if stage == "agenda_detalhes":
+        return _collect_appointment_details(state)
+    if stage == "agenda_tipo_joia":
+        return _collect_purchase_preference(state)
     if stage == "agenda_contato":
         return _collect_contact_details(state)
     if stage == "agenda_resumo_confirmacao":
@@ -347,9 +359,96 @@ def _collect_appointment_reason(state: LaraGraphState) -> LaraGraphState:
         state["missing_fields"] = ["appointment_reason"]
         return state
 
+    if not _has_context_details(raw):
+        return _ask_appointment_details(state)
+
+    preference = _extract_purchase_preference(raw)
+    if preference:
+        context["purchase_preference"] = preference
+
+    if not context.get("purchase_preference"):
+        return _ask_purchase_preference(state)
+
     if context.get("customer_email") and context.get("phone_confirmed") is True:
         return _ask_appointment_confirmation(state)
 
+    return _ask_contact_details(state)
+
+
+def _ask_appointment_details(state: LaraGraphState) -> LaraGraphState:
+    context = state["state"].setdefault("collected_context", {})
+    state["state"]["conversation_stage"] = "agenda_detalhes"
+    state["intent"] = "appointment"
+    state["conversation_stage"] = "agenda_detalhes"
+    state["reply_blocks"] = [
+        _warm_acknowledgement(context["interest"]),
+        "Me conta um pouco mais sobre esse momento e os detalhes que você tem em mente?",
+    ]
+    state["next_action"] = "reply"
+    state["missing_fields"] = ["appointment_details"]
+    return state
+
+
+def _collect_appointment_details(state: LaraGraphState) -> LaraGraphState:
+    raw = state["message"].strip()
+    context = state["state"].setdefault("collected_context", {})
+    context["appointment_details"] = raw
+    context["appointment_reason"] = _join_context_parts(context.get("appointment_reason"), raw)
+    context["interest"] = _infer_interest(_normalize_text(context["appointment_reason"]))
+    state["intent"] = "appointment"
+    state["crm_note"] = _build_crm_note(state["state"])
+
+    if not _has_context_details(raw):
+        state["state"]["conversation_stage"] = "agenda_detalhes"
+        state["conversation_stage"] = "agenda_detalhes"
+        state["reply_blocks"] = [
+            "Certo.",
+            "Para orientar melhor a especialista, me diga se é para casamento, noivado, presente ou outra ocasião especial.",
+        ]
+        state["next_action"] = "reply"
+        state["missing_fields"] = ["appointment_details"]
+        return state
+
+    if not _has_purchase_preference(raw):
+        return _ask_purchase_preference(state)
+
+    context["purchase_preference"] = _extract_purchase_preference(raw)
+    return _ask_contact_details(state)
+
+
+def _ask_purchase_preference(state: LaraGraphState) -> LaraGraphState:
+    state["state"]["conversation_stage"] = "agenda_tipo_joia"
+    state["intent"] = "appointment"
+    state["conversation_stage"] = "agenda_tipo_joia"
+    state["reply_blocks"] = [
+        "Perfeito, isso ajuda bastante.",
+        "Você quer ver uma joia pronta ou prefere avaliar uma peça personalizada?",
+    ]
+    state["next_action"] = "reply"
+    state["missing_fields"] = ["purchase_preference"]
+    return state
+
+
+def _collect_purchase_preference(state: LaraGraphState) -> LaraGraphState:
+    raw = state["message"].strip()
+    context = state["state"].setdefault("collected_context", {})
+    preference = _extract_purchase_preference(raw)
+    if not preference:
+        state["state"]["conversation_stage"] = "agenda_tipo_joia"
+        state["intent"] = "appointment"
+        state["conversation_stage"] = "agenda_tipo_joia"
+        state["reply_blocks"] = [
+            "Entendi.",
+            "Só para eu deixar claro para a especialista: você prefere ver uma joia pronta ou personalizada?",
+        ]
+        state["next_action"] = "reply"
+        state["missing_fields"] = ["purchase_preference"]
+        return state
+
+    context["purchase_preference"] = preference
+    context["appointment_reason"] = _join_context_parts(context.get("appointment_reason"), raw)
+    state["intent"] = "appointment"
+    state["crm_note"] = _build_crm_note(state["state"])
     return _ask_contact_details(state)
 
 
@@ -399,7 +498,7 @@ def _ask_appointment_confirmation(state: LaraGraphState) -> LaraGraphState:
     context = state["state"].setdefault("collected_context", {})
     pending = state["state"].get("pending_booking") or {}
     name = state["state"].get("confirmed_name") or "cliente"
-    reason = context.get("appointment_reason") or "atendimento na loja"
+    reason = _appointment_summary(context)
     state["state"]["conversation_stage"] = "agenda_resumo_confirmacao"
     state["intent"] = "appointment"
     state["conversation_stage"] = "agenda_resumo_confirmacao"
@@ -594,6 +693,61 @@ def _has_useful_reason(value: str) -> bool:
     return _has_any(text, useful_terms) or len(words) >= 5
 
 
+def _has_context_details(value: str) -> bool:
+    text = _normalize_text(value)
+    detail_terms = (
+        "presente",
+        "formatura",
+        "aniversario",
+        "aniversário",
+        "esposa",
+        "marido",
+        "namorada",
+        "namorado",
+        "gravacao",
+        "gravação",
+        "nome",
+        "nomes",
+        "data",
+        "casar",
+        "surpresa",
+    )
+    words = [word for word in re.split(r"\s+", text) if len(word) >= 2]
+    return _has_any(text, detail_terms) or len(words) >= 8
+
+
+def _has_purchase_preference(value: str) -> bool:
+    return _extract_purchase_preference(value) is not None
+
+
+def _extract_purchase_preference(value: str) -> str | None:
+    text = _normalize_text(value)
+    if _has_any(text, ("personaliz", "sob medida", "encomendar", "fazer uma", "mandar fazer")):
+        return "personalizada"
+    if _has_any(text, ("pronta", "pronto", "modelo pronto", "ver modelos", "comprar na hora")):
+        return "pronta"
+    return None
+
+
+def _join_context_parts(*parts: str | None) -> str:
+    clean = [part.strip() for part in parts if part and part.strip()]
+    if not clean:
+        return ""
+    result: list[str] = []
+    for part in clean:
+        if part not in result:
+            result.append(part)
+    return " ".join(result)
+
+
+def _appointment_summary(context: dict[str, Any]) -> str:
+    reason = context.get("appointment_reason") or "atendimento na loja"
+    preference = context.get("purchase_preference")
+    if preference:
+        return f"{reason} Preferência: joia {preference}."
+    return reason
+
+
 def _extract_email(value: str) -> str | None:
     match = re.search(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+", value)
     return match.group(0).lower() if match else None
@@ -642,6 +796,7 @@ def _build_crm_note(state: dict[str, Any]) -> str:
         f"E-mail: {context.get('customer_email')}",
         "WhatsApp confirmado: sim" if context.get("phone_confirmed") is True else "",
         f"Interesse: {context.get('interest')}",
+        f"Preferência: {context.get('purchase_preference')}",
         f"Motivo: {context.get('appointment_reason')}",
         f"Agenda: {pending.get('date')} {pending.get('time')}",
     ]

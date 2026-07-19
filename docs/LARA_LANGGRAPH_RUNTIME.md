@@ -58,7 +58,7 @@ Saída:
 {
   "reply_blocks": [],
   "intent": "identification|discovery|appointment|catalog|closing",
-  "conversation_stage": "identificacao|descoberta|agenda_slots|agenda_contexto|agenda_resumo_confirmacao|agenda_criar|encerrado",
+  "conversation_stage": "identificacao|descoberta|agenda_slots|agenda_contexto|agenda_detalhes|agenda_tipo_joia|agenda_contato|agenda_resumo_confirmacao|agenda_criar|encerrado",
   "lead_temperature": "frio|morno|quente",
   "collected_context": {},
   "missing_fields": [],
@@ -81,10 +81,13 @@ flowchart TD
   B --> C["descoberta"]
   C --> D["agenda_slots"]
   D --> E["agenda_contexto"]
-  E --> F["agenda_resumo_confirmacao"]
-  F --> G["agenda_criar"]
-  C --> H["catalogo_info"]
-  C --> I["encerrado"]
+  E --> F["agenda_detalhes"]
+  F --> G["agenda_tipo_joia"]
+  G --> H["agenda_contato"]
+  H --> I["agenda_resumo_confirmacao"]
+  I --> J["agenda_criar"]
+  C --> K["catalogo_info"]
+  C --> L["encerrado"]
 ```
 
 ## Regras Críticas Implementadas
@@ -96,7 +99,11 @@ flowchart TD
 - Erro de digitação simples em agendamento é entendido, como `qro agenda uma vizta`.
 - Horário escolhido não cria appointment imediatamente.
 - Antes de criar appointment, Lara coleta motivo da visita.
+- Antes de pedir e-mail, Lara coleta contexto consultivo da compra.
+- Antes de pedir e-mail, Lara identifica se o cliente quer joia pronta ou personalizada.
+- E-mail e confirmação do WhatsApp são coletados antes do resumo final.
 - Antes de criar appointment, Lara resume e pede confirmação.
+- Se o cliente corrigir o resumo, Lara atualiza o contexto e confirma novamente.
 - Endereço fixo correto:
   - `Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901`
 
@@ -159,6 +166,9 @@ LangGraph fica responsável por:
 - decidir estado;
 - capturar nome confirmado;
 - capturar motivo;
+- capturar detalhes consultivos da visita;
+- capturar preferência entre joia pronta e personalizada;
+- capturar e-mail e confirmação do WhatsApp antes do CRM;
 - montar resposta em blocos;
 - decidir próxima ação;
 - gerar `crm_note`.
