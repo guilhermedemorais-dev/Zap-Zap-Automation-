@@ -1,0 +1,101 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "v9_active",
+      "ok": true,
+      "details": {
+        "id": "7kXu17NYpsN8Yc65",
+        "name": "LARA V9 Shadow SDR",
+        "active": true
+      }
+    },
+    {
+      "name": "v7_inactive_during_v9_test",
+      "ok": true,
+      "details": {
+        "id": "7SucjAi8zU69sQuT",
+        "name": "ORION-WF-Bot-v7-LARA-SDR",
+        "active": false
+      }
+    },
+    {
+      "name": "langgraph_nodes_exist",
+      "ok": true,
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "name": "root_calls_langgraph_instead_of_ai_agent",
+      "ok": true,
+      "details": {
+        "targets": [
+          "Lara LangGraph Turn"
+        ]
+      }
+    },
+    {
+      "name": "langgraph_output_preserves_existing_parser_contract",
+      "ok": true,
+      "details": {
+        "targets": [
+          "Code: Parse Agent Output"
+        ]
+      }
+    },
+    {
+      "name": "crm_slots_return_to_langgraph_memory",
+      "ok": true,
+      "details": {
+        "crm_targets": [
+          "Code: Slots Para LangGraph"
+        ],
+        "slot_formatter_targets": [
+          "IF: CRM Retornou Slots"
+        ],
+        "slot_if_targets": [
+          "Lara LangGraph Slots Turn",
+          "Code: Parse Final Output"
+        ],
+        "slot_langgraph_targets": [
+          "Code: Parse Final Output"
+        ]
+      }
+    },
+    {
+      "name": "crm_slots_query_contract",
+      "ok": true,
+      "details": {
+        "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/available-slots",
+        "query_names": [
+          "date",
+          "next_available"
+        ]
+      }
+    },
+    {
+      "name": "booking_confirmation_bypasses_free_llm",
+      "ok": true,
+      "details": {
+        "crm_create_targets": [
+          "Code: Formatar Tool Result"
+        ],
+        "tool_result_targets": [
+          "Code: Parse Final Output"
+        ]
+      }
+    },
+    {
+      "name": "crm_create_payload_contract",
+      "ok": true,
+      "details": {
+        "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/create-appointment",
+        "has_customer_name": true,
+        "has_customer_email": true,
+        "has_visit_reason": true,
+        "has_ai_context": true
+      }
+    }
+  ]
+}

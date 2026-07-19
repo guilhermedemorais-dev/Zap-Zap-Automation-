@@ -75,10 +75,19 @@ if (nextAction === 'check_availability') {
     'Deixa eu verificar nossa agenda para você.',
     'Aguarde um momento, por favor.'
   ];
+  function nextBusinessDate() {
+    const sp = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    sp.setDate(sp.getDate() + 1);
+    if (sp.getDay() === 0) sp.setDate(sp.getDate() + 1);
+    const yyyy = sp.getFullYear();
+    const mm = String(sp.getMonth() + 1).padStart(2, '0');
+    const dd = String(sp.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
   const out = baseOutput('action', preBlocks);
   const args = {
-    date: availability.date || '',
-    period: availability.period || 'qualquer'
+    date: String(availability.date || '').match(/^\d{4}-\d{2}-\d{2}$/) ? availability.date : nextBusinessDate(),
+    next_available: availability.next_available !== false
   };
   out.action = 'check_availability';
   out.arguments = args;
@@ -313,6 +322,42 @@ return pass(parsed);
 """
 
 
+CRM_AVAILABLE_SLOTS_PARAMS = {
+    "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/available-slots",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "httpHeaderAuth",
+    "sendQuery": True,
+    "queryParameters": {
+        "parameters": [
+            {
+                "name": "date",
+                "value": "={{ (() => { const a = $('Code: Parse Agent Output').item.json.action_args || {}; const raw = String(a.date || ''); if (/^\\d{4}-\\d{2}-\\d{2}$/.test(raw)) return raw; const sp = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })); sp.setDate(sp.getDate() + 1); if (sp.getDay() === 0) sp.setDate(sp.getDate() + 1); const yyyy = sp.getFullYear(); const mm = String(sp.getMonth() + 1).padStart(2, '0'); const dd = String(sp.getDate()).padStart(2, '0'); return `${yyyy}-${mm}-${dd}`; })() }}",
+            },
+            {
+                "name": "next_available",
+                "value": "={{ String(($('Code: Parse Agent Output').item.json.action_args || {}).next_available !== false) }}",
+            },
+        ]
+    },
+    "options": {"timeout": 10000},
+}
+
+
+CRM_CREATE_APPOINTMENT_BODY = "={{ (() => { const a = $('Code: Parse Agent Output').item.json.action_args || {}; const ctx = a.crm_context || $('Code: Parse Agent Output').item.json.crm_context || {}; const reason = a.visit_reason || ctx.visit_reason || ctx.interesse || ctx.interest || ''; const email = a.customer_email || a.email || ctx.customer_email || ctx.email || ''; const name = a.customer_name || ctx.customer_name || ''; const details = []; if (name) details.push('Cliente: ' + name); if (email) details.push('E-mail: ' + email); details.push('WhatsApp confirmado: sim'); if (reason) details.push('Motivo da visita: ' + reason); if (a.notes) details.push('Observações: ' + a.notes); if (ctx.summary_for_human) details.push('Resumo IA: ' + ctx.summary_for_human); return JSON.stringify({ whatsapp_number: '+' + $('Global Variables').item.json.number, type: a.type || 'VISITA_PRESENCIAL', starts_at: a.starts_at, ends_at: a.ends_at, customer_name: name || null, customer_email: email || null, visit_reason: reason || null, notes: details.join('\\n'), ai_context: { interesse: ctx.interesse || ctx.interest || reason || null, material: ctx.material || null, ocasiao: ctx.ocasiao || ctx.occasion || null, orcamento: ctx.orcamento || ctx.budget || null, urgencia: ctx.urgencia || ctx.urgency || null, customer_name: name || null, visit_reason: reason || null, customer_email: email || null, phone_confirmed: !!a.phone_confirmed, original_notes: a.notes || null, summary_for_human: ctx.summary_for_human || null, recommended_next_step: ctx.recommended_next_step || null } }); })() }}"
+
+
+CRM_CREATE_APPOINTMENT_PARAMS = {
+    "method": "POST",
+    "url": "https://api.crm.orinjoias.com/api/v1/n8n/webhook/create-appointment",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "httpHeaderAuth",
+    "sendBody": True,
+    "specifyBody": "json",
+    "jsonBody": CRM_CREATE_APPOINTMENT_BODY,
+    "options": {"timeout": 15000},
+}
+
+
 def request_json(method, path, payload=None):
     if not TOKEN:
         raise SystemExit("Set N8N_API_KEY before running this script")
@@ -468,6 +513,8 @@ def main():
     node_by_name(workflow, "Code: Parse Agent Output")["parameters"]["jsCode"] = LANGGRAPH_TURN_CODE
     node_by_name(workflow, "Code: Parse Final Output")["parameters"]["jsCode"] = PARSE_FINAL_CODE
     node_by_name(workflow, "Code: Formatar Tool Result")["parameters"]["jsCode"] = BOOKING_RESULT_CODE
+    node_by_name(workflow, "CRM: Buscar Slots")["parameters"] = CRM_AVAILABLE_SLOTS_PARAMS
+    node_by_name(workflow, "CRM: Criar Appointment")["parameters"] = CRM_CREATE_APPOINTMENT_PARAMS
 
     add_http_node(
         workflow,

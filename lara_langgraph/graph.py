@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Any, Literal, TypedDict
 
@@ -294,7 +295,12 @@ def _start_appointment(state: LaraGraphState) -> LaraGraphState:
     ]
     state["next_action"] = "check_availability"
     state["missing_fields"] = ["available_slots"]
-    state["tool_payload"] = {"availability": {"period": "next_available"}}
+    state["tool_payload"] = {
+        "availability": {
+            "date": _next_business_date(),
+            "next_available": True,
+        }
+    }
     return state
 
 
@@ -496,6 +502,14 @@ def _match_slot(text: str, slots: list[dict[str, str]]) -> dict[str, str] | None
         if slot.get("time") == wanted:
             return deepcopy(slot)
     return None
+
+
+def _next_business_date() -> str:
+    sao_paulo = timezone(timedelta(hours=-3))
+    target = datetime.now(sao_paulo).date() + timedelta(days=1)
+    if target.weekday() == 6:
+        target += timedelta(days=1)
+    return target.isoformat()
 
 
 def _infer_interest(text: str) -> str:

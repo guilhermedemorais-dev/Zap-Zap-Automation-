@@ -438,3 +438,46 @@ Bloqueios restantes para producao:
 - Ainda falta QA real via WhatsApp no numero de teste apontado para o webhook shadow.
 - Memoria duravel de producao ainda nao foi definida, `InMemorySaver` serve apenas para QA/local.
 - Promocao para producao continua bloqueada ate teste WhatsApp real e aprovacao humana.
+
+### Bloco executado em 2026-07-19: contrato n8n ↔ LangGraph ↔ CRM
+
+Problema confirmado:
+
+- o workflow V9 chamava LangGraph, mas o contrato de agenda podia chegar ao CRM sem `date`;
+- o endpoint do CRM `/api/v1/n8n/webhook/available-slots` exige `date` em `YYYY-MM-DD`;
+- o endpoint `/api/v1/n8n/webhook/create-appointment` aceitava `ai_context`, mas nao persistia `customer_name` e `customer_email` no lead;
+- isso explicava travamento em "vou verificar agenda", horarios nao retornando e pre-cadastro pobre no CRM.
+
+Correcoes aplicadas:
+
+- `lara_langgraph/graph.py` agora envia `tool_payload.availability.date` com proximo dia util e `next_available=true`;
+- workflow V9 remoto atualizado para enviar `date` e `next_available` ao CRM;
+- workflow V9 remoto atualizado para enviar `customer_name`, `customer_email`, `visit_reason` e `ai_context` no create appointment;
+- `CRM: Buscar Slots` retorna para `Code: Slots Para LangGraph`, depois para `Lara LangGraph Slots Turn`, mantendo os horarios reais na memoria do grafo;
+- `CRM: Criar Appointment` passa por resposta deterministica, sem LLM livre formatando confirmacao.
+
+Correcoes preparadas no CRM API:
+
+- `/webhook/available-slots` aceita `next_available=true` e procura ate 14 dias para frente;
+- `/webhook/create-appointment` grava nome/e-mail no lead quando vierem no payload ou no `ai_context`;
+- `ai_context` do appointment passa a ser enriquecido com `customer_name`, `customer_email` e `visit_reason`.
+
+Validacao executada:
+
+- `.venv-langgraph/bin/python -m unittest tests/test_lara_langgraph.py tests/test_lara_service.py -v`
+  - Resultado: 18/18 testes passaram.
+- `npm run typecheck` em `/home/guimp/Documentos/Orion-CRM/apps/api`
+  - Resultado: passou.
+- `N8N_API_KEY=... python3 scripts/lara_verify_v9_langgraph_bridge.py`
+  - Resultado: `PASS`.
+  - Evidencia salva em `qa/lara_v9_langgraph_bridge_report.json`.
+- Smoke local do contrato LangGraph:
+  - `next_action`: `check_availability`;
+  - `tool_payload`: `{"availability":{"date":"2026-07-20","next_available":true}}`.
+
+Limites honestos desta validacao:
+
+- nao valida conversa WhatsApp real ponta a ponta;
+- nao valida runtime do container LangGraph da VPS apos rebuild;
+- nao valida API do CRM em producao ate o container/API ser rebuildado e redeployado;
+- nao substitui inspecao de execution real do n8n depois do teste no WhatsApp.
