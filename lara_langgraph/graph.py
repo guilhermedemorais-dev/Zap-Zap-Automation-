@@ -13,6 +13,7 @@ from langgraph.graph import START
 
 STORE_ADDRESS = "Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901"
 STORE_MAPS_URL = "https://maps.app.goo.gl/geMC3hHsQqGfSnnm6"
+_SESSION_STATES: dict[str, dict[str, Any]] = {}
 
 
 class LaraGraphState(TypedDict, total=False):
@@ -89,11 +90,18 @@ def handle_turn(payload: dict[str, Any]) -> dict[str, Any]:
         "safety": {"used_confirmed_facts_only": True, "needs_human": False},
     }
     if "state" in payload:
-        initial["state"] = _initial_state(payload)
+        provided_state = payload.get("state")
+        if isinstance(provided_state, dict) and provided_state:
+            initial["state"] = _initial_state(payload)
+    if "state" not in initial and initial["session_id"] in _SESSION_STATES:
+        initial["state"] = deepcopy(_SESSION_STATES[initial["session_id"]])
 
     config = {"configurable": {"thread_id": initial["session_id"]}}
     result = graph.invoke(initial, config)
-    return _public_result(result)
+    public = _public_result(result)
+    if initial["session_id"]:
+        _SESSION_STATES[initial["session_id"]] = deepcopy(public.get("state") or {})
+    return public
 
 
 @lru_cache(maxsize=1)

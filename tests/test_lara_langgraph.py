@@ -66,6 +66,21 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertEqual(second["conversation_stage"], "agenda_slots")
         self.assertEqual(second["state"]["confirmed_name"], "Jhonatan")
 
+    def test_same_session_does_not_reset_after_greeting_name_and_appointment(self):
+        session_id = "wa:+5547999992222"
+        first = run_turn("Boa noite", session_id=session_id)
+        second = run_turn("Guilherme", session_id=session_id)
+        third = run_turn("Fazer um agendamento", session_id=session_id)
+
+        self.assertEqual(first["conversation_stage"], "identificacao")
+        self.assertEqual(second["conversation_stage"], "descoberta")
+        self.assertEqual(second["state"]["confirmed_name"], "Guilherme")
+        self.assertEqual(third["intent"], "appointment")
+        self.assertEqual(third["conversation_stage"], "agenda_slots")
+        self.assertEqual(third["next_action"], "check_availability")
+        self.assertEqual(third["state"]["confirmed_name"], "Guilherme")
+        self.assertNotIn("informar seu nome", "\n".join(third["reply_blocks"]).lower())
+
     def test_greeting_words_are_never_saved_as_name(self):
         for message in ["Oi", "Oii", "Bom dia", "Boa tarde", "Boa noite", "ok", "sim"]:
             with self.subTest(message=message):
