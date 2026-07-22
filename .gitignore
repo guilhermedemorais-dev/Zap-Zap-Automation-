@@ -1,3 +1,13 @@
 backups/execution-*.json
+backups/n8n-lara-*.json
+backups/n8n-ORION-WF-Bot-v7-after-*.json
+backups/n8n-ORION-WF-Bot-v7-before-*.json
+backups/n8n-ORION-WF-Bot-v7-with-*.json
 orin_joias_workflow.json
 orin_joias_workflow.json.bak.*
+.venv-langgraph/
+__pycache__/
+*.pyc
+.codex/
+qa/n8n_qa_execution_*.json
+reference-repos/

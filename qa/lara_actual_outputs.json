@@ -1,0 +1,461 @@
+{
+  "description": "Outputs reais capturados do n8n QA Simulator",
+  "outputs": {
+    "QA-01": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4067"
+    },
+    "QA-02": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Prazer, Mariana.",
+        "Me conta o que você está buscando hoje?",
+        "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "",
+        "customer_name": "Mariana"
+      },
+      "execution_id": "4068"
+    },
+    "QA-03": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Ainda não tenho um catálogo online com link direto das peças.",
+        "Mas posso te ajudar por aqui e encaminhar para uma especialista verificar as opções disponíveis.",
+        "Para eu te atender melhor, você poderia me informar seu nome?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4069"
+    },
+    "QA-04": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?",
+        "Sobre alianças, posso te ajudar por aqui e encaminhar para uma especialista verificar as opções disponíveis."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "aliança",
+        "material": "ouro 17k",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "aliança"
+      },
+      "execution_id": "4070"
+    },
+    "QA-05": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Os valores variam conforme material, medida e acabamento.",
+        "Pra eu não te passar nada errado, uma especialista precisa confirmar as opções certinhas.",
+        "Você quer que eu verifique um horário para atendimento?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "aliança",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "aliança"
+      },
+      "execution_id": "4071"
+    },
+    "QA-06": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "A ORIN Joias fica na Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901.",
+        "Google Maps: https://maps.app.goo.gl/geMC3hHsQqGfSnnm6",
+        "Quer que eu verifique um horário para você ser atendida?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4072"
+    },
+    "QA-07": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?",
+        "Depois disso eu verifico os horários disponíveis para atendimento na loja."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4073"
+    },
+    "QA-08": {
+      "type": "post_action_response",
+      "action": null,
+      "message_blocks": [
+        "Tenho estes horários disponíveis:",
+        "01/07 às 09:00\n01/07 às 10:00\n01/07 às 11:00",
+        "Qual desses funciona melhor para você?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4074"
+    },
+    "QA-09": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Consigo seguir com esse horário, sim. Me confirma o dia, seu nome completo e o motivo da visita?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4075"
+    },
+    "QA-10": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Prazer, Mariana.",
+        "Entendi que você quer ver alianças.",
+        "Posso verificar um horário para atendimento na loja ou encaminhar para uma especialista te ajudar com as opções."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "alianças",
+        "material": "",
+        "ocasiao": "casamento",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "alianças",
+        "customer_name": "Mariana Souza"
+      },
+      "execution_id": "4076"
+    },
+    "QA-11": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Ainda posso te ajudar com esse atendimento?",
+        "Se preferir, posso deixar para uma especialista continuar com você."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4077"
+    },
+    "QA-12": {
+      "type": "handoff",
+      "action": null,
+      "message_blocks": [
+        "Claro, vou encaminhar seu atendimento para uma especialista da ORIN.",
+        "Vou deixar um resumo do que você me contou para ela continuar sem te fazer repetir tudo."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "Cliente pediu atendimento humano.",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4078"
+    },
+    "QA-13": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?",
+        "Sobre alianças, posso te ajudar por aqui e encaminhar para uma especialista verificar as opções disponíveis."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "alianças",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "alianças"
+      },
+      "execution_id": "4079"
+    },
+    "QA-14": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Ainda não tenho link direto de produto para te enviar.",
+        "Posso encaminhar para uma especialista verificar esse modelo ou agendar um atendimento para você conhecer as opções."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "aliança",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "aliança"
+      },
+      "execution_id": "4080"
+    },
+    "QA-15": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?",
+        "Depois disso eu verifico os horários disponíveis para atendimento na loja."
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4081"
+    },
+    "QA-16": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4082"
+    },
+    "QA-17": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Perfeito, Jhonatan.",
+        "Me confirma só o que você prefere agora: ver o catálogo, tirar uma dúvida sobre joias ou agendar um atendimento presencial?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "",
+        "customer_name": "Jhonatan"
+      },
+      "execution_id": "4083"
+    },
+    "QA-18": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4084"
+    },
+    "QA-19": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Prazer, Jhonatan.",
+        "Me conta o que você está buscando hoje?",
+        "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "",
+        "customer_name": "Jhonatan"
+      },
+      "execution_id": "4085"
+    },
+    "QA-20": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Olá, boa noite. Tudo bem?",
+        "Aqui é a Lara, consultora virtual da ORIN Joias.",
+        "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": ""
+      },
+      "execution_id": "4086"
+    },
+    "QA-21": {
+      "type": "response",
+      "action": null,
+      "message_blocks": [
+        "Prazer, Guilherme.",
+        "Me conta o que você está buscando hoje?",
+        "Se quiser, posso te mostrar nosso catálogo de joias ou podemos agendar um atendimento presencial. Qual você prefere?"
+      ],
+      "action_args": {},
+      "crm_context": {
+        "interesse": "",
+        "material": "",
+        "ocasiao": "",
+        "orcamento": "",
+        "urgencia": "",
+        "summary_for_human": "",
+        "recommended_next_step": "",
+        "visit_reason": "",
+        "customer_name": "Guilherme"
+      },
+      "execution_id": "4087"
+    },
+    "QA-22": {
+      "type": "root_command_error",
+      "action": "unknown",
+      "message_blocks": [
+        "Comando não reconhecido.",
+        "Você quis dizer /reset?",
+        "Use /help para ver os comandos disponíveis."
+      ],
+      "action_args": {},
+      "crm_context": {},
+      "execution_id": "4088"
+    }
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "version": "2026-06-30",
+  "project": "Lara ORIN WhatsApp Automation",
+  "current_focus": "Implementar QA Simulator no n8n sem side effects",
+  "rules": [
+    "Nao testar em cliente real",
+    "Nao enviar WhatsApp em qa_mode",
+    "Nao criar appointment real em qa_mode",
+    "Comportamento da Lara deve ser ajustado no ROOT",
+    "Workflow n8n deve mudar apenas para infraestrutura, estado, QA, RAG, CRM, parser e seguranca",
+    "Produto com link fica bloqueado ate existir catalogo oficial"
+  ],
+  "tasks": [
+    {
+      "id": "LARA-000",
+      "title": "Consolidar plano mestre",
+      "status": "done",
+      "priority": "P0",
+      "type": "docs",
+      "dependencies": [],
+      "docs": ["docs/LARA_MASTER_EXECUTION_PLAN.md"],
+      "acceptance": ["Plano mestre criado", "Ordem de execucao definida"]
+    },
+    {
+      "id": "LARA-001",
+      "title": "Base factual JSONL inicial",
+      "status": "done",
+      "priority": "P0",
+      "type": "data",
+      "dependencies": [],
+      "docs": ["docs/LARA_RAG_JSONL_ARCHITECTURE.md"],
+      "files": ["knowledge/*.jsonl", "catalogo/README.md"],
+      "acceptance": ["JSONL valido", "Sem preco/estoque/link de produto inventado"]
+    },
+    {
+      "id": "LARA-002",
+      "title": "QA local offline",
+      "status": "done",
+      "priority": "P0",
+      "type": "qa",
+      "dependencies": ["LARA-001"],
+      "docs": ["docs/LARA_QA_CONVERSATION_TESTS.md"],
+      "files": ["qa/lara_qa_scenarios.json", "scripts/lara_qa_runner.js", "qa/lara_qa_report.json"],
+      "acceptance": ["node scripts/lara_qa_runner.js passa", "14 cenarios passam"]
+    },
+    {
+      "id": "LARA-003",
+      "title": "Backup e auditoria antes de alterar n8n",
+      "status": "done",
+      "priority": "P0",
+      "type": "n8n-safety",
+      "dependencies": ["LARA-000", "LARA-002"],
+      "docs": ["docs/ORION_WF_BOT_V7_CURRENT_FLOW.md", "docs/LARA_QA_SIMULATOR_PLAN.md", "docs/LARA_N8N_AUDIT_20260630.md"],
+      "acceptance": ["Workflow ativo exportado", "Backup salvo em backups/", "Nos de envio WhatsApp e CRM identificados"]
+    },
+    {
+      "id": "LARA-004",
+      "title": "Implementar QA Simulator no n8n",
+      "status": "in_progress",
+      "priority": "P0",
+      "type": "n8n-feature",
+      "dependencies": ["LARA-003"],
+      "docs": ["docs/LARA_QA_SIMULATOR_PLAN.md"],
+      "acceptance": [
+        "qa_mode exige numero fake",
+        "qa_mode bloqueia envio WhatsApp",
+        "qa_mode bloqueia create/update CRM real",
+        "mocks de check_availability/create_booking/handoff funcionam",
+        "gera output compativel com qa/lara_actual_outputs.json"
+      ],
+      "progress": [
+        "qa_mode publicado no workflow ativo",
+        "QA: É Modo Seguro? inserido antes de If: É Action?",
+        "QA: Normalizar Output bloqueia side effects",
+        "Smoke QA-01 executado sem WhatsApp/CRM",
+        "QA-01 passou no runner parcial"
+      ],
+      "remaining": [
+        "validar actions check_availability/create_booking/handoff",
+        "validar cenarios com estado de conversa",
+        "gerar qa/lara_actual_outputs.json completo com 14 cenarios"
+      ]
+    },
+    {
+      "id": "LARA-005",
+      "title": "Rodar QA real contra n8n simulator",
+      "status": "blocked_by_LARA-004",
+      "priority": "P0",
+      "type": "qa",
+      "dependencies": ["LARA-004"],
+      "files": ["qa/lara_actual_outputs.json"],
+      "acceptance": ["node scripts/lara_qa_runner.js --actual qa/lara_actual_outputs.json passa", "14 cenarios passam"]
+    },
+    {
+      "id": "LARA-006",
+      "title": "Implementar State Graph minimo",
+      "status": "blocked_by_LARA-005",
+      "priority": "P0",
+      "type": "n8n-feature",
+      "dependencies": ["LARA-005"],
+      "acceptance": [
+        "conversation_state persistido por numero",
+        "confirmed_name separado de profile_name",
+        "pending_booking controlado",
+        "last_offered_slots controlado",
+        "QA-13 passa sem nome errado"
+      ]
+    },
+    {
+      "id": "LARA-007",
+      "title": "Integrar buscador knowledge JSONL",
+      "status": "blocked_by_LARA-006",
+      "priority": "P1",
+      "type": "n8n-feature",
+      "dependencies": ["LARA-006"],
+      "acceptance": [
+        "RAG_CONTEXT compacto injetado",
+        "Busca retorna no maximo 3 fontes",
+        "Produto especifico sem catalogo usa fallback",
+        "Endereco usa knowledge/loja.jsonl"
+      ]
+    },
+    {
+      "id": "LARA-008",
+      "title": "Corrigir agendamento e CRM context",
+      "status": "blocked_by_LARA-005",
+      "priority": "P0",
+      "type": "n8n-crm",
+      "dependencies": ["LARA-005"],
+      "acceptance": [
+        "Nao confirma antes de create_booking",
+        "Exige nome completo",
+        "Exige motivo real",
+        "ai_context inclui summary_for_human",
+        "Endereco so apos confirmacao ou pedido de localizacao"
+      ]
+    },
+    {
+      "id": "LARA-009",
+      "title": "Implementar inatividade",
+      "status": "blocked_by_LARA-006",
+      "priority": "P1",
+      "type": "n8n-feature",
+      "dependencies": ["LARA-006"],
+      "acceptance": ["Apos 5 min pergunta se cliente quer continuar", "Nao envia loop de mensagens", "Estado vira inativo/encerrado"]
+    },
+    {
+      "id": "LARA-010",
+      "title": "Teste WhatsApp numero de teste",
+      "status": "blocked_by_LARA-005",
+      "priority": "P0",
+      "type": "e2e",
+      "dependencies": ["LARA-005", "LARA-006", "LARA-008"],
+      "acceptance": ["Numero de teste recebe respostas corretas", "Sem cliente real", "Sem loop", "CRM teste validado"]
+    },
+    {
+      "id": "LARA-011",
+      "title": "Painel visual ROOT",
+      "status": "future",
+      "priority": "P2",
+      "type": "ui",
+      "dependencies": ["LARA-010"],
+      "acceptance": ["Editar blocos", "Ver logs", "Rodar QA", "Bloquear fontes"]
+    },
+    {
+      "id": "LARA-012",
+      "title": "Catalogo online futuro",
+      "status": "future_blocked",
+      "priority": "P2",
+      "type": "catalog",
+      "dependencies": [],
+      "blocked_reason": "Nao existe catalogo online oficial",
+      "acceptance": ["Fonte oficial existe", "catalogo/*.jsonl validado", "Links quebrados bloqueados"]
+    },
+    {
+      "id": "LARA-013",
+      "title": "Avaliar LangGraph",
+      "status": "future_optional",
+      "priority": "P3",
+      "type": "architecture",
+      "dependencies": ["LARA-010"],
+      "acceptance": ["Gargalo do n8n comprovado", "PoC com replay de estados", "Custo/beneficio aprovado"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "description": "Exemplo de arquivo de respostas reais. Copie para qa/lara_actual_outputs.json e preencha com outputs capturados do n8n simulador.",
+  "outputs": {
+    "QA-01": {
+      "type": "response",
+      "message_blocks": [
+        "Olá, tudo bem? Sou a Lara, consultora virtual da ORIN Joias.",
+        "Pra te atender melhor, qual é o seu nome?",
+        "Posso te ajudar com uma joia para uma ocasião especial, personalização ou agendamento."
+      ]
+    }
+  }
+}
