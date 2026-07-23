@@ -104,6 +104,10 @@ flowchart TD
 - E-mail e confirmação do WhatsApp são coletados antes do resumo final.
 - Antes de criar appointment, Lara resume e pede confirmação.
 - Se o cliente corrigir o resumo, Lara atualiza o contexto e confirma novamente.
+- Pergunta direta de endereço responde somente a fonte oficial da loja, sem
+  iniciar agendamento.
+- Pedido de atendente/especialista gera handoff e pausa respostas automáticas
+  posteriores na conversa.
 - Endereço fixo correto:
   - `Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901`
 
@@ -175,36 +179,62 @@ LangGraph fica responsável por:
 
 ## Memória
 
-A versão local usa `InMemorySaver`, suficiente para QA e smoke local.
+A versão local usa `InMemorySaver` para o grafo e um cache por `session_id`.
 
-Para produção, isso ainda não é suficiente:
+Em produção, o cache da Lara também é persistido em arquivo JSON quando a variável
+`LARA_STATE_FILE` está configurada. No VPS atual:
 
-- `InMemorySaver` perde estado quando o serviço reinicia;
-- produção deve usar checkpointer durável, preferencialmente Postgres;
-- o `thread_id` deve ser derivado do número/conversa e nunca gerado pela IA.
+```text
+LARA_STATE_FILE=/data/lara_sessions.json
+```
 
-## Bloqueio Operacional Atual
+O container `lara-langgraph` monta um volume Docker em `/data`, então o estado
+continua disponível após restart/recreate simples do serviço.
 
-Para aplicar isso no n8n remoto, falta uma URL pública ou interna acessível pelo n8n para o serviço LangGraph.
+Limite técnico ainda aberto:
 
-Sem isso, qualquer alteração remota seria gambiarra:
+- a persistência por arquivo reduz reset de conversa, mas não é a solução final para alta concorrência;
+- a versão definitiva deve migrar o checkpointer/estado para Postgres ou Redis durável;
+- o `thread_id` deve continuar derivado do número/conversa e nunca gerado pela IA.
 
-- n8n remoto não consegue chamar `localhost` da máquina local;
-- Code node do n8n não roda pacote Python `langgraph`;
-- publicar um HTTP Request para URL inexistente quebraria produção.
+## Estado Operacional Atual
+
+O bloqueio de hospedagem foi resolvido.
+
+O runtime LangGraph roda no VPS como container separado, na mesma rede Docker do n8n.
+
+Endpoint interno usado pelo n8n:
+
+```text
+http://lara-langgraph:8080/v1/lara/turn
+```
+
+Health check de dentro do container n8n:
+
+```bash
+docker exec n8n-zcac-n8n-1 wget -qO- http://lara-langgraph:8080/health
+```
+
+Resultado esperado:
+
+```json
+{"status":"ok"}
+```
+
+## Correções Recentes
+
+- confirmação final como `Sim é isso mesmo` não sobrescreve mais o motivo da visita;
+- `/rclear` limpa a sessão no LangGraph antes de qualquer etapa conversacional;
+- saudação simples após reset não duplica `tudo bem`;
+- sessões contaminadas de teste foram removidas do arquivo persistido remoto.
 
 ## Próximo Passo Real
 
-Escolher onde hospedar:
+Validar a conversa real pelo WhatsApp depois da última correção:
 
-- no mesmo VPS do n8n, via Docker;
-- no servidor do CRM;
-- em um serviço externo com URL HTTPS.
-
-Depois disso:
-
-1. configurar `LARA_LANGGRAPH_URL`;
-2. criar node HTTP `Lara LangGraph Turn`;
-3. preservar fallback para o fluxo atual enquanto valida;
-4. rodar QA remoto em número de teste;
-5. só então ativar produção.
+1. enviar `/rclear`;
+2. confirmar reset;
+3. iniciar com `Olá`;
+4. completar a jornada de agendamento;
+5. conferir appointment no CRM;
+6. registrar a execution id no issue `ORION-CRM#14`.

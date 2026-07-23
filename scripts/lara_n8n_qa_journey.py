@@ -207,7 +207,7 @@ def main() -> None:
     }
 
     for journey_index, journey in enumerate(journeys, start=1):
-        fake_number = f"+5500000009{journey_index:02d}"
+        fake_number = f"+550000000{int(time.time() * 1000) % 1000000:06d}{journey_index:02d}"
         journey_outputs = []
         journey_errors = []
         for step_index, step in enumerate(journey.get("steps", []), start=1):

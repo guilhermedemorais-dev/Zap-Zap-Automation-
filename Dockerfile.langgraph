@@ -2,6 +2,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV LARA_STATE_FILE=/data/lara_sessions.json
 
 WORKDIR /app
 
@@ -9,6 +10,7 @@ COPY requirements-langgraph.txt /app/requirements-langgraph.txt
 RUN pip install --no-cache-dir -r /app/requirements-langgraph.txt
 
 COPY lara_langgraph /app/lara_langgraph
+RUN mkdir -p /data
 
 EXPOSE 8080
 
