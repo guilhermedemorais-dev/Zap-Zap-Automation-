@@ -498,3 +498,112 @@ Ordem correta de diagnostico:
 7. Registrar execution id e resultado no issue `ORION-CRM#14`.
 
 Sem execution id ou evidencia real, nao declarar a automacao pronta.
+
+## Mapa Completo Para Handoff
+
+O mapa completo do fluxo esta em:
+
+```text
+docs/LARA_FULL_FLOW_MAP.md
+```
+
+Esse arquivo documenta:
+
+- entrada WhatsApp/UAZAPI;
+- deduplicacao e anti-loop;
+- tratamento de texto;
+- tratamento de audio, imagem, video e documentos;
+- extracao de CSV, PDF, XLSX, JSON, XML, HTML, RTF, ICS e texto;
+- buffer de mensagens;
+- ROOT console;
+- LangGraph;
+- memoria persistida;
+- CRM;
+- envio WhatsApp;
+- QA mode;
+- scripts;
+- knowledge/catalogo;
+- backups;
+- diagnostico por execution id;
+- erros reais ja corrigidos;
+- criterio de pronto.
+
+## Prompt De Meta Para O Proximo Executor
+
+Copie este prompt para a meta/tarefa do proximo agente executor:
+
+```text
+Voce vai assumir a tarefa ORION-CRM#14, Lara V9 WhatsApp SDR da ORIN Joias.
+
+Sua responsabilidade e concluir e validar a automacao sem quebrar o que ja foi feito.
+
+Antes de qualquer alteracao, leia obrigatoriamente:
+1. README.md
+2. docs/LARA_FULL_FLOW_MAP.md
+3. docs/LARA_LANGGRAPH_RUNTIME.md
+4. docs/VERSION_HISTORY.md
+5. docs/LARA_V9_PRODUCTION_HANDOFF.md
+6. qa/lara_v9_goal_report_20260720.md
+7. docs/prompts/LARA_V9_EXECUTION_LOOP_PROMPT.md
+8. lara_langgraph/graph.py
+9. lara_langgraph/service.py
+10. tests/test_lara_langgraph.py
+
+Contexto:
+- Workflow n8n atual: LARA V9 Shadow SDR, id 7kXu17NYpsN8Yc65.
+- Workflow antigo de referencia: ORION-WF-Bot-v7-LARA-SDR, id 7SucjAi8zU69sQuT.
+- LangGraph interno: http://lara-langgraph:8080/v1/lara/turn.
+- Health: http://lara-langgraph:8080/health.
+- Endereco correto: Av. Brasil, 1500 - Centro, Balneario Camboriu - SC, 88330-901.
+- Maps correto: https://maps.app.goo.gl/geMC3hHsQqGfSnnm6.
+
+O fluxo faz ponta a ponta:
+1. Recebe mensagem do WhatsApp pela UAZAPI.
+2. Filtra mensagem propria e deduplica por id.
+3. Identifica se e texto, audio, imagem, video ou arquivo.
+4. Para texto, normaliza e envia para buffer.
+5. Para audio, baixa midia, transcreve e transforma em texto.
+6. Para imagem, baixa midia, analisa imagem/caption e transforma em texto.
+7. Para documentos, extrai CSV, PDF, XLSX, JSON, XML, HTML, RTF, ICS ou texto quando possivel.
+8. Junta mensagens rapidas em buffer para evitar resposta fora de ordem.
+9. Decide se a mensagem e ROOT/admin ou cliente.
+10. ROOT administra status/configuracoes sem virar motor de estado.
+11. Cliente segue para LangGraph.
+12. LangGraph controla estado, memoria, nome confirmado, descoberta, agendamento, motivo, detalhes, contato, resumo e confirmacao.
+13. Se precisar horario, LangGraph retorna check_availability.
+14. n8n consulta slots reais no CRM.
+15. n8n devolve slots ao LangGraph.
+16. Lara apresenta horarios reais.
+17. Cliente escolhe horario.
+18. Lara coleta motivo, contexto e preferencia.
+19. Lara coleta e-mail e confirma WhatsApp quando necessario.
+20. Lara resume e pede confirmacao final.
+21. Somente apos confirmacao final, LangGraph retorna create_appointment.
+22. n8n cria appointment real no CRM.
+23. n8n envia confirmacao, endereco correto e link do Google Maps.
+24. n8n registra telemetria de envio.
+
+Regras obrigatorias:
+- Nao mexa em prompt primeiro. Diagnostique por execution id.
+- Nao invente horario, endereco, preco, estoque ou link de produto.
+- Nao use profile_name como nome confirmado.
+- Nao pergunte nome de novo depois que o cliente informou.
+- Nao crie appointment antes de motivo, contato e confirmacao final.
+- Nao envie endereco antes do cliente pedir ou antes do agendamento confirmado.
+- Nao deixe dois workflows responderem o mesmo numero.
+- Nao rode QA com side effects reais.
+- Nao commite dumps brutos sem scan de segredo.
+
+Primeira acao:
+1. Rode git status.
+2. Confirme workflows ativos no n8n.
+3. Rode health do LangGraph de dentro do container n8n.
+4. Peça ou capture uma execution id do erro mais recente.
+5. Abra os nos Get Message, ROOT, Lara LangGraph Turn, Parse Agent Output, Enviar Blocos e CRM.
+6. Corrija uma causa por rodada.
+7. Adicione teste local se tocar no LangGraph.
+8. Registre evidencias no issue ORION-CRM#14.
+
+Criterio de conclusao:
+So declare READY quando a jornada real WhatsApp -> n8n -> LangGraph -> CRM slots -> LangGraph -> CRM appointment -> WhatsApp passar, com appointment visivel no CRM e execution id registrada.
+```

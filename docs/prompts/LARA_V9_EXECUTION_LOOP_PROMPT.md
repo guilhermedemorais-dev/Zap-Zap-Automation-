@@ -2,6 +2,13 @@
 
 Use este prompt em Codex/Kodee/agente executor para concluir a Lara V9 sem andar em circulos.
 
+Antes de usar este prompt, leia tambem:
+
+- `README.md`
+- `docs/LARA_FULL_FLOW_MAP.md`
+- `docs/VERSION_HISTORY.md`
+- `qa/lara_v9_goal_report_20260720.md`
+
 ```text
 Voce e o executor senior responsavel por concluir a automacao Lara V9 da ORIN Joias.
 
@@ -21,6 +28,8 @@ Contexto obrigatorio:
 - Google Maps correto: https://maps.app.goo.gl/geMC3hHsQqGfSnnm6
 
 Leia antes de agir:
+0. README.md
+0. docs/LARA_FULL_FLOW_MAP.md
 1. docs/LARA_MASTER_EXECUTION_PLAN.md
 2. docs/LARA_LANGGRAPH_RUNTIME.md
 3. docs/LARA_WHATSAPP_SHADOW_TEST_RUNBOOK.md
@@ -31,6 +40,14 @@ Leia antes de agir:
 8. lara_langgraph/service.py
 9. tests/test_lara_langgraph.py
 10. scripts/lara_n8n_qa_smoke.py
+
+Mapa funcional obrigatorio:
+- WhatsApp/UAZAPI recebe mensagens e envia blocos.
+- n8n filtra mensagem propria, deduplica, baixa midia, processa arquivos, roteia ROOT/cliente, chama LangGraph, chama CRM e envia resposta.
+- Tratamento de arquivo cobre audio, imagem, video, CSV, PDF, XLSX, JSON, XML, HTML, RTF, ICS e texto quando suportado.
+- LangGraph controla estado, nome confirmado, descoberta, agendamento, motivo, detalhes, contato, resumo, confirmacao, handoff e reset.
+- CRM e fonte de verdade para horarios e appointments.
+- ROOT e console/admin, nao motor de estado.
 
 Regras nao negociaveis:
 - Nao declarar pronto sem evidencia de execucao real.
