@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import re
+import json
+import os
+import tempfile
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
+from threading import RLock
 from typing import Any, Literal, TypedDict
 
 from langgraph.checkpoint.memory import InMemorySaver
@@ -13,7 +17,9 @@ from langgraph.graph import START
 
 STORE_ADDRESS = "Av. Brasil, 1500 - Centro, Balneário Camboriú - SC, 88330-901"
 STORE_MAPS_URL = "https://maps.app.goo.gl/geMC3hHsQqGfSnnm6"
+STATE_FILE = os.getenv("LARA_STATE_FILE", "")
 _SESSION_STATES: dict[str, dict[str, Any]] = {}
+_SESSION_LOCK = RLock()
 
 
 class LaraGraphState(TypedDict, total=False):
@@ -69,11 +75,14 @@ APPOINTMENT_TERMS = (
 )
 
 CATALOG_TERMS = ("catalogo", "catálogo", "modelo", "joia", "alianca", "aliança", "anel", "brinco")
+ADDRESS_TERMS = ("onde fica", "endereco", "endereço", "localizacao", "localização", "maps", "mapa", "rota")
+HUMAN_TERMS = ("atendente", "humano", "humana", "especialista", "vendedor", "vendedora", "pessoa")
 
 
 def handle_turn(payload: dict[str, Any]) -> dict[str, Any]:
     """Run one Lara turn through the LangGraph state machine."""
 
+    _load_session_states()
     graph = _compiled_graph()
     initial: LaraGraphState = {
         "session_id": str(payload.get("session_id") or payload.get("phone") or ""),
@@ -100,8 +109,44 @@ def handle_turn(payload: dict[str, Any]) -> dict[str, Any]:
     result = graph.invoke(initial, config)
     public = _public_result(result)
     if initial["session_id"]:
-        _SESSION_STATES[initial["session_id"]] = deepcopy(public.get("state") or {})
+        with _SESSION_LOCK:
+            _SESSION_STATES[initial["session_id"]] = deepcopy(public.get("state") or {})
+            _save_session_states()
     return public
+
+
+def _load_session_states() -> None:
+    if _SESSION_STATES or not STATE_FILE:
+        return
+    with _SESSION_LOCK:
+        if _SESSION_STATES:
+            return
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as file:
+                data = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(key, str) and isinstance(value, dict):
+                    _SESSION_STATES[key] = value
+
+
+def _save_session_states() -> None:
+    if not STATE_FILE:
+        return
+    directory = os.path.dirname(STATE_FILE) or "."
+    os.makedirs(directory, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(prefix=".lara_sessions_", suffix=".json", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
+            json.dump(_SESSION_STATES, file, ensure_ascii=False)
+        os.replace(tmp_path, STATE_FILE)
+    except OSError:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
 
 
 @lru_cache(maxsize=1)
@@ -113,6 +158,9 @@ def _compiled_graph():
     workflow.add_node("discovery", _discovery)
     workflow.add_node("appointment", _appointment)
     workflow.add_node("catalog_info", _catalog_info)
+    workflow.add_node("store_info", _store_info)
+    workflow.add_node("handoff_request", _handoff_request)
+    workflow.add_node("clear_session", _clear_session)
     workflow.add_node("closing", _closing)
     workflow.add_node("human_takeover", _human_takeover)
 
@@ -126,11 +174,14 @@ def _compiled_graph():
             "discovery": "discovery",
             "appointment": "appointment",
             "catalog_info": "catalog_info",
+            "store_info": "store_info",
+            "handoff_request": "handoff_request",
+            "clear_session": "clear_session",
             "closing": "closing",
             "human_takeover": "human_takeover",
         },
     )
-    for node in ("identity", "discovery", "appointment", "catalog_info", "closing", "human_takeover"):
+    for node in ("identity", "discovery", "appointment", "catalog_info", "store_info", "handoff_request", "clear_session", "closing", "human_takeover"):
         workflow.add_edge(node, END)
     return workflow.compile(checkpointer=InMemorySaver())
 
@@ -166,6 +217,18 @@ def _supervisor(state: LaraGraphState) -> LaraGraphState:
         state["route"] = "human_takeover"
         return state
 
+    if _is_clear_command(text):
+        state["route"] = "clear_session"
+        return state
+
+    if _asks_human(text):
+        state["route"] = "handoff_request"
+        return state
+
+    if _asks_store_location(text):
+        state["route"] = "store_info"
+        return state
+
     if current in {
         "agenda_slots",
         "agenda_contexto",
@@ -187,6 +250,10 @@ def _supervisor(state: LaraGraphState) -> LaraGraphState:
 
     if _is_closing(text):
         state["route"] = "closing"
+    elif _asks_human(text):
+        state["route"] = "handoff_request"
+    elif _asks_store_location(text):
+        state["route"] = "store_info"
     elif _has_any(text, APPOINTMENT_TERMS):
         state["route"] = "appointment"
     elif _has_any(text, CATALOG_TERMS):
@@ -218,8 +285,9 @@ def _identity(state: LaraGraphState) -> LaraGraphState:
     state["state"]["conversation_stage"] = "identificacao"
     state["intent"] = "identification"
     state["conversation_stage"] = "identificacao"
+    greeting_line = "Olá, tudo bem?" if greeting == "tudo bem" else f"Olá, {greeting}. Tudo bem?"
     state["reply_blocks"] = [
-        f"Olá, {greeting}. Tudo bem?",
+        greeting_line,
         "Aqui é a Lara, consultora virtual da ORIN Joias.",
         "Para que eu consiga te oferecer um atendimento mais preciso, você poderia me informar seu nome?",
     ]
@@ -254,6 +322,44 @@ def _catalog_info(state: LaraGraphState) -> LaraGraphState:
         "Posso entender o tipo de joia que você procura e te conduzir para um atendimento presencial ou para uma especialista verificar as opções com segurança.",
     ]
     state["next_action"] = "reply"
+    return state
+
+
+def _store_info(state: LaraGraphState) -> LaraGraphState:
+    current = state["state"].get("conversation_stage") or "informacao_loja"
+    state["intent"] = "information"
+    state["conversation_stage"] = current
+    state["reply_blocks"] = [
+        f"A ORIN Joias fica na {STORE_ADDRESS}.",
+        f"Google Maps: {STORE_MAPS_URL}",
+    ]
+    state["next_action"] = "reply"
+    state["missing_fields"] = []
+    return state
+
+
+def _handoff_request(state: LaraGraphState) -> LaraGraphState:
+    state["state"]["human_takeover"] = True
+    state["state"]["conversation_stage"] = "handoff"
+    state["intent"] = "handoff"
+    state["conversation_stage"] = "handoff"
+    state["reply_blocks"] = ["Vou chamar uma especialista para continuar seu atendimento."]
+    state["next_action"] = "handoff"
+    state["missing_fields"] = []
+    state["safety"] = {"used_confirmed_facts_only": True, "needs_human": True}
+    return state
+
+
+def _clear_session(state: LaraGraphState) -> LaraGraphState:
+    state["state"] = _initial_state({"phone": state.get("phone", "")})
+    state["intent"] = "session_clear"
+    state["conversation_stage"] = "inicio"
+    state["reply_blocks"] = ["Conversa reiniciada. Pode me chamar de novo quando quiser."]
+    state["next_action"] = "reply"
+    state["missing_fields"] = []
+    state["tool_payload"] = {}
+    state["crm_note"] = ""
+    state["safety"] = {"used_confirmed_facts_only": True, "needs_human": False}
     return state
 
 
@@ -295,6 +401,8 @@ def _show_available_slots(state: LaraGraphState) -> LaraGraphState:
 
 def _start_appointment(state: LaraGraphState) -> LaraGraphState:
     slots = list(state.get("available_slots") or [])
+    name = state["state"].get("confirmed_name")
+    agenda_intro = f"Perfeito, {name}. Deixa eu verificar nossa agenda." if name else "Deixa eu verificar nossa agenda."
     state["intent"] = "appointment"
     state["conversation_stage"] = "agenda_slots"
     state["state"]["conversation_stage"] = "agenda_slots"
@@ -302,7 +410,7 @@ def _start_appointment(state: LaraGraphState) -> LaraGraphState:
     if slots:
         state["state"]["last_offered_slots"] = slots
         state["reply_blocks"] = [
-            "Deixa eu verificar nossa agenda.",
+            agenda_intro,
             "Tenho estes horários disponíveis:",
             *_format_slots(slots),
             "Qual desses horários funciona melhor para você?",
@@ -312,7 +420,7 @@ def _start_appointment(state: LaraGraphState) -> LaraGraphState:
         return state
 
     state["reply_blocks"] = [
-        "Deixa eu verificar nossa agenda.",
+        agenda_intro,
         "Aguarde um momento, por favor.",
     ]
     state["next_action"] = "check_availability"
@@ -507,12 +615,13 @@ def _ask_appointment_confirmation(state: LaraGraphState) -> LaraGraphState:
     pending = state["state"].get("pending_booking") or {}
     name = state["state"].get("confirmed_name") or "cliente"
     reason = _appointment_summary(context)
+    when = _format_pending_booking(pending)
     state["state"]["conversation_stage"] = "agenda_resumo_confirmacao"
     state["intent"] = "appointment"
     state["conversation_stage"] = "agenda_resumo_confirmacao"
     state["crm_note"] = _build_crm_note(state["state"])
     state["reply_blocks"] = [
-        f"Perfeito, {name}. Para confirmar: seu atendimento fica para {pending.get('label') or pending.get('date')} às {pending.get('time')}.",
+        f"Perfeito, {name}. Para confirmar: seu atendimento fica para {when}.",
         f"Assunto do atendimento: {reason}.",
         "Confirma para mim se é isso mesmo?",
     ]
@@ -614,6 +723,18 @@ def _has_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(term in text for term in terms)
 
 
+def _asks_store_location(text: str) -> bool:
+    return _has_any(text, ADDRESS_TERMS) or ("loja" in text and any(term in text for term in ("fica", "endereco", "endereço", "localizacao", "localização")))
+
+
+def _asks_human(text: str) -> bool:
+    return _has_any(text, HUMAN_TERMS) and any(term in text for term in ("falar", "chamar", "atender", "atendimento", "quero", "preciso"))
+
+
+def _is_clear_command(text: str) -> bool:
+    return text in {"/rclear", "rclear", "/clear", "clear", "/limpar", "limpar conversa", "/reiniciar", "reiniciar conversa"}
+
+
 def _looks_like_name(raw: str, normalized: str) -> bool:
     if normalized in NON_NAME_MESSAGES:
         return False
@@ -667,12 +788,45 @@ def _format_slots(slots: list[dict[str, str]]) -> list[str]:
     return formatted
 
 
+def _format_pending_booking(pending: dict[str, Any]) -> str:
+    label = str(pending.get("label") or "").strip()
+    time = str(pending.get("time") or "").strip()
+    date = str(pending.get("date") or "").strip()
+    if label and time and time in label:
+        return label
+    if label and time:
+        return f"{label} às {time}"
+    if label:
+        return label
+    if date and time:
+        return f"{date} às {time}"
+    return date or time or "data e horário combinados"
+
+
 def _match_slot(text: str, slots: list[dict[str, str]]) -> dict[str, str] | None:
     hour_match = re.search(r"\b(\d{1,2})(?::?(\d{2}))?\b", text)
-    if not hour_match:
-        return None
-    hour = int(hour_match.group(1))
-    minute = hour_match.group(2) or "00"
+    if hour_match:
+        hour = int(hour_match.group(1))
+        minute = hour_match.group(2) or "00"
+    else:
+        word_hours = {
+            "oito": 8,
+            "nove": 9,
+            "dez": 10,
+            "onze": 11,
+            "doze": 12,
+            "treze": 13,
+            "quatorze": 14,
+            "catorze": 14,
+            "quinze": 15,
+            "dezesseis": 16,
+            "dezessete": 17,
+            "dezoito": 18,
+        }
+        hour = next((value for word, value in word_hours.items() if re.search(rf"\b{word}\b", text)), None)
+        if hour is None:
+            return None
+        minute = "00"
     wanted = f"{hour:02d}:{minute}"
     for slot in slots:
         if slot.get("time") == wanted:
@@ -752,7 +906,7 @@ def _appointment_summary(context: dict[str, Any]) -> str:
     reason = context.get("appointment_reason") or "atendimento na loja"
     preference = context.get("purchase_preference")
     if preference:
-        return f"{reason} Preferência: joia {preference}."
+        return f"{reason.rstrip(' .')}. Preferência: joia {preference}"
     return reason
 
 
@@ -812,7 +966,33 @@ def _build_crm_note(state: dict[str, Any]) -> str:
 
 
 def _is_confirmation(text: str) -> bool:
-    return text in {"sim", "confirmado", "confirma", "isso", "isso mesmo", "ok", "certo"} or "confirm" in text
+    compact = re.sub(r"[^\w\s]+", " ", text)
+    compact = re.sub(r"\s+", " ", compact).strip()
+    if compact in {
+        "sim",
+        "confirmado",
+        "confirma",
+        "confirmo",
+        "isso",
+        "isso mesmo",
+        "e isso",
+        "e isso mesmo",
+        "ok",
+        "certo",
+        "correto",
+        "exato",
+        "exatamente",
+    }:
+        return True
+    return bool(
+        re.search(
+            r"\b(sim|ok|certo|correto|exato|exatamente)\b.*\b(isso|confirm|mesmo)\b|"
+            r"\b(isso|confirm|mesmo)\b.*\b(sim|ok|certo|correto|exato|exatamente)\b|"
+            r"\b(pode|pode sim|pode deixar)\b.*\b(confirmar|registrar|agendar)\b|"
+            r"\b(confirmo|confirmado|confirmar|confirma)\b",
+            compact,
+        )
+    )
 
 
 def _is_closing(text: str) -> bool:

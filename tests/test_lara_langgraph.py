@@ -1,6 +1,9 @@
 import unittest
+from pathlib import Path
 from itertools import count
+from tempfile import TemporaryDirectory
 
+import lara_langgraph.graph as graph_module
 from lara_langgraph.graph import handle_turn
 from lara_langgraph.root_console import apply_root_command, parse_root_command
 
@@ -35,6 +38,13 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertNotIn("Teste orin", text)
         self.assertIsNone(result["state"].get("confirmed_name"))
 
+    def test_generic_hello_does_not_duplicate_tudo_bem(self):
+        result = run_turn("Olá")
+
+        self.assertEqual(result["intent"], "identification")
+        self.assertIn("Olá, tudo bem?", result["reply_blocks"])
+        self.assertNotIn("Olá, tudo bem. Tudo bem?", "\n".join(result["reply_blocks"]))
+
     def test_name_after_greeting_moves_to_discovery(self):
         first = run_turn("Boa noite")
         second = run_turn("Jhonatan", first["state"])
@@ -66,6 +76,31 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertEqual(second["conversation_stage"], "agenda_slots")
         self.assertEqual(second["state"]["confirmed_name"], "Jhonatan")
 
+    def test_file_state_store_survives_runtime_cache_clear(self):
+        original_file = graph_module.STATE_FILE
+        session_id = "wa:+5547999993333"
+        try:
+            with TemporaryDirectory() as tmpdir:
+                graph_module.STATE_FILE = str(Path(tmpdir) / "sessions.json")
+                graph_module._SESSION_STATES.clear()
+                graph_module._compiled_graph.cache_clear()
+
+                first = run_turn("Guilherme", {"conversation_stage": "identificacao"}, session_id=session_id)
+                self.assertEqual(first["state"]["confirmed_name"], "Guilherme")
+
+                graph_module._SESSION_STATES.clear()
+                graph_module._compiled_graph.cache_clear()
+
+                second = run_turn("quero agendar", session_id=session_id)
+
+                self.assertEqual(second["state"]["confirmed_name"], "Guilherme")
+                self.assertEqual(second["conversation_stage"], "agenda_slots")
+                self.assertEqual(second["next_action"], "check_availability")
+        finally:
+            graph_module.STATE_FILE = original_file
+            graph_module._SESSION_STATES.clear()
+            graph_module._compiled_graph.cache_clear()
+
     def test_same_session_does_not_reset_after_greeting_name_and_appointment(self):
         session_id = "wa:+5547999992222"
         first = run_turn("Boa noite", session_id=session_id)
@@ -79,6 +114,7 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertEqual(third["conversation_stage"], "agenda_slots")
         self.assertEqual(third["next_action"], "check_availability")
         self.assertEqual(third["state"]["confirmed_name"], "Guilherme")
+        self.assertIn("Perfeito, Guilherme.", "\n".join(third["reply_blocks"]))
         self.assertNotIn("informar seu nome", "\n".join(third["reply_blocks"]).lower())
 
     def test_greeting_words_are_never_saved_as_name(self):
@@ -96,6 +132,29 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertEqual(result["conversation_stage"], "agenda_slots")
         self.assertEqual(result["next_action"], "check_availability")
         self.assertIn("available_slots", result["missing_fields"])
+
+    def test_store_location_question_returns_official_address_without_starting_booking(self):
+        state = run_turn("Camila", {"conversation_stage": "identificacao"})["state"]
+        result = run_turn("onde fica a loja?", state)
+
+        self.assertEqual(result["intent"], "information")
+        self.assertEqual(result["next_action"], "reply")
+        text = "\n".join(result["reply_blocks"])
+        self.assertIn("Av. Brasil, 1500", text)
+        self.assertIn("https://maps.app.goo.gl/geMC3hHsQqGfSnnm6", text)
+        self.assertNotEqual(result["next_action"], "check_availability")
+
+    def test_human_request_routes_to_handoff_and_pauses_next_bot_reply(self):
+        state = run_turn("Camila", {"conversation_stage": "identificacao"})["state"]
+        result = run_turn("quero falar com uma atendente", state)
+        follow_up = run_turn("oi", result["state"])
+
+        self.assertEqual(result["intent"], "handoff")
+        self.assertEqual(result["next_action"], "handoff")
+        self.assertTrue(result["safety"]["needs_human"])
+        self.assertTrue(result["state"]["human_takeover"])
+        self.assertEqual(follow_up["next_action"], "none")
+        self.assertEqual(follow_up["reply_blocks"], [])
 
     def test_available_slots_are_presented_without_creating_booking(self):
         state = run_turn("Camila", {"conversation_stage": "identificacao"})["state"]
@@ -124,6 +183,22 @@ class LaraLangGraphTest(unittest.TestCase):
 
         self.assertEqual(result["conversation_stage"], "agenda_contexto")
         self.assertEqual(result["next_action"], "reply")
+        self.assertEqual(result["state"]["pending_booking"]["time"], "10:00")
+        self.assertIn("motivo", "\n".join(result["reply_blocks"]).lower())
+
+    def test_selected_slot_accepts_hour_written_in_words(self):
+        state = run_turn("Camila", {"conversation_stage": "identificacao"})["state"]
+        slots = [
+            {"date": "2026-07-03", "label": "03/07", "time": "09:00"},
+            {"date": "2026-07-03", "label": "03/07", "time": "10:00"},
+            {"date": "2026-07-03", "label": "03/07", "time": "11:00"},
+        ]
+        state["conversation_stage"] = "agenda_slots"
+        state["last_offered_slots"] = slots
+
+        result = run_turn("pode ser as dez", state)
+
+        self.assertEqual(result["conversation_stage"], "agenda_contexto")
         self.assertEqual(result["state"]["pending_booking"]["time"], "10:00")
         self.assertIn("motivo", "\n".join(result["reply_blocks"]).lower())
 
@@ -262,6 +337,52 @@ class LaraLangGraphTest(unittest.TestCase):
         self.assertIn("WhatsApp confirmado: sim", result["tool_payload"]["appointment"]["notes"])
         self.assertIn("Preferência: personalizada", result["tool_payload"]["appointment"]["notes"])
         self.assertNotIn("Av. Brasil, 1500", "\n".join(result["reply_blocks"]))
+
+    def test_final_confirmation_phrase_does_not_overwrite_visit_reason(self):
+        state = {
+            "conversation_stage": "agenda_resumo_confirmacao",
+            "confirmed_name": "Guilherme",
+            "phone": "+5522998911070",
+            "pending_booking": {"date": "2026-07-21", "label": "21/07", "time": "09:00"},
+            "collected_context": {
+                "appointment_reason": "Estou querendo fazer um par de aliança de casamento, então gostaria de saber sobre o catálogo e o tipo ouro vocês têm",
+                "interest": "alianças de casamento",
+                "customer_email": "guilherme@example.com",
+                "phone_confirmed": True,
+                "purchase_preference": "personalizada",
+            },
+        }
+
+        result = run_turn("Sim é isso mesmo", state)
+
+        self.assertEqual(result["conversation_stage"], "agenda_criar")
+        self.assertEqual(result["next_action"], "create_appointment")
+        payload = result["tool_payload"]["appointment"]
+        self.assertEqual(payload["reason"], "Estou querendo fazer um par de aliança de casamento, então gostaria de saber sobre o catálogo e o tipo ouro vocês têm")
+        self.assertNotEqual(payload["reason"], "Sim é isso mesmo")
+        self.assertIn("alianças de casamento", payload["notes"])
+        self.assertNotIn("Para preparar melhor", "\n".join(result["reply_blocks"]))
+
+    def test_rclear_resets_session_instead_of_becoming_appointment_reason(self):
+        state = {
+            "conversation_stage": "agenda_contexto",
+            "confirmed_name": "Guilherme",
+            "phone": "+5522998911070",
+            "pending_booking": {"date": "2026-07-21", "label": "21/07", "time": "09:00"},
+            "collected_context": {
+                "appointment_reason": "alianças de casamento",
+                "interest": "alianças de casamento",
+            },
+        }
+
+        result = run_turn("/rclear", state)
+
+        self.assertEqual(result["intent"], "session_clear")
+        self.assertEqual(result["conversation_stage"], "inicio")
+        self.assertIsNone(result["state"].get("confirmed_name"))
+        self.assertIsNone(result["state"].get("pending_booking"))
+        self.assertEqual(result["state"].get("collected_context"), {})
+        self.assertNotIn("/rclear", result["crm_note"])
 
     def test_full_appointment_journey_keeps_context_until_create_payload(self):
         first = run_turn("Boa noite")

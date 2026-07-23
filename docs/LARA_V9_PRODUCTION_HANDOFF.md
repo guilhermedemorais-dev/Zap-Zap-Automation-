@@ -2,18 +2,18 @@
 
 ## Resumo executivo
 
-A Lara V9 ja esta criada e ativa no n8n remoto como workflow shadow. Ela ainda nao deve substituir a producao porque falta o teste real no WhatsApp apontado para o webhook shadow.
+A Lara V9 ja esta criada no n8n remoto e, na ultima verificacao, era a unica workflow ativa retornada pela API do n8n.
+
+Ela ainda nao deve ser declarada 100% pronta porque falta o teste real do usuario no WhatsApp depois da ultima correcao de `/rclear` e confirmacao final.
 
 ## Estado atual
 
-- Producao atual preservada: `ORION-WF-Bot-v7-LARA-SDR`
-- ID producao: `7SucjAi8zU69sQuT`
-- Webhook producao: `whatsapp-inbound`
-- Hotfix aplicado em producao em 2026-07-15: guard contra reinicio de atendimento apos nome confirmado e pedido de agendamento.
-- Shadow V9 ativo: `LARA V9 Shadow SDR`
-- ID shadow: `7kXu17NYpsN8Yc65`
-- Webhook shadow: `whatsapp-inbound-v9-shadow`
-- URL shadow: `https://n8n-zcac.srv1478933.hstgr.cloud/webhook/whatsapp-inbound-v9-shadow`
+- Workflow antigo de referencia: `ORION-WF-Bot-v7-LARA-SDR`
+- ID antigo: `7SucjAi8zU69sQuT`
+- Workflow V9 atual: `LARA V9 Shadow SDR`
+- ID V9: `7kXu17NYpsN8Yc65`
+- LangGraph interno: `http://lara-langgraph:8080/v1/lara/turn`
+- Health: `http://lara-langgraph:8080/health`
 - Numero de producao do cliente: `+55 47 9696-3593`
 
 ## O que ja foi validado
@@ -27,18 +27,19 @@ A Lara V9 ja esta criada e ativa no n8n remoto como workflow shadow. Ela ainda n
 - Execucoes contrato de entrada: `3982` a `3985`.
 - Payloads validados: UAZAPI atual, Evolution/Baileys `messages.upsert`, `data.text` e payload achatado defensivo.
 - QA sem side effects: nenhuma execucao de teste rodou envio WhatsApp real, CRM real, agenda real ou save real do ROOT.
-- Producao segue ativa e com webhook original.
-- Promocao para producao esta bloqueada por script enquanto faltar evidencia WhatsApp real.
+- Health do LangGraph validado de dentro do container n8n.
+- Correcao de `/rclear` validada por smoke remoto direto no LangGraph.
+- Correcao de confirmacao final como `Sim e isso mesmo` validada por smoke remoto direto no LangGraph.
 
 ## O que ainda falta
 
-O numero de teste precisa chamar o webhook shadow, nao a producao.
+Falta o usuario validar a ultima alteracao pelo WhatsApp real.
 
 Depois disso, executar o roteiro em:
 
 - `docs/LARA_WHATSAPP_SHADOW_TEST_RUNBOOK.md`
 
-Se o WhatsApp real repetir abertura, errar nome, inventar informacao, confirmar agenda antes do motivo ou mandar endereco errado, a V9 reprova e deve ser corrigida no shadow.
+Se o WhatsApp real repetir abertura, errar nome, inventar informacao, confirmar agenda antes do motivo ou mandar endereco errado, a V9 reprova e deve ser corrigida pela execution id mais recente.
 
 ## Como registrar a evidencia real
 
