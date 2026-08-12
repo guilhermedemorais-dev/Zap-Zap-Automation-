@@ -528,129 +528,145 @@ Esse arquivo documenta:
 - erros reais ja corrigidos;
 - criterio de pronto.
 
-## Atualizacoes Implementadas
+## Ultimas Atualizacoes
 
-Esta secao registra o que foi refeito e estabilizado na Lara V9 para o proximo
-dev entender o historico tecnico sem depender do chat.
+Este bloco substitui o prompt que estava no final do README. O objetivo aqui e
+registrar exatamente o que foi feito na ultima rodada para outro dev entender o
+estado atual sem depender do historico do chat.
 
-### Reestruturação Da Conversa
+### Conversa E Estado
 
-- O atendimento deixou de depender de um prompt unico solto.
-- A decisao de etapa passou para o runtime LangGraph.
-- O fluxo foi organizado por estado conversacional:
-  - identificacao;
-  - descoberta;
-  - busca de horarios;
-  - coleta de motivo;
-  - coleta de detalhes;
-  - coleta de contato;
-  - resumo;
-  - confirmacao;
-  - criacao de appointment;
-  - pos-agendamento;
-  - handoff.
-- A Lara nao deve usar nome do perfil do WhatsApp como nome confirmado.
-- Saudacoes curtas e respostas monossilabicas nao viram nome.
-- Depois que o cliente informa nome, a Lara nao deve repetir abertura nem pedir
-  nome novamente.
+- A Lara V9 foi reorganizada para conduzir o atendimento por estados, nao por
+  prompt solto:
+  - `inicio`;
+  - `identificacao`;
+  - `descoberta`;
+  - `agenda_slots`;
+  - `agenda_contexto`;
+  - `agenda_detalhes`;
+  - `agenda_contato`;
+  - `agenda_resumo_confirmacao`;
+  - `agenda_criar`;
+  - `pos_agendamento`;
+  - `handoff`.
+- Saudacao curta, como `Ola`, `Oi`, `Bom dia` ou `Boa noite`, deve abrir o
+  atendimento e pedir o nome.
+- Nome so e confirmado quando o cliente informa o nome na conversa.
+- `profile_name` do WhatsApp e apenas informativo, nao pode virar nome
+  confirmado automaticamente.
+- Depois do nome confirmado, a Lara deve perguntar o que o cliente busca e
+  oferecer catalogo ou atendimento presencial.
+- A Lara nao deve pedir o nome novamente depois que o cliente ja informou.
+- A Lara nao deve reiniciar a saudacao no meio da conversa quando o cliente pede
+  agendamento.
+
+### Agendamento
+
+- O fluxo de agendamento correto ficou definido assim:
+  - cliente pede atendimento presencial;
+  - Lara solicita horarios reais ao CRM;
+  - n8n consulta slots reais;
+  - Lara apresenta somente horarios recebidos do CRM;
+  - cliente escolhe horario;
+  - Lara coleta motivo da visita;
+  - Lara coleta detalhes que ajudem o atendente;
+  - Lara coleta e-mail/contato quando necessario;
+  - Lara resume data, horario, motivo e detalhes;
+  - cliente confirma;
+  - n8n cria appointment no CRM;
+  - Lara confirma o agendamento e so entao envia endereco e Google Maps.
+- Endereco oficial validado:
+
+```text
+Av. Brasil, 1500 - Centro, Balneario Camboriu - SC, 88330-901
+Google Maps: https://maps.app.goo.gl/geMC3hHsQqGfSnnm6
+```
+
+- O endereco so deve aparecer antes do fim se o cliente pedir localizacao.
+- A agenda do CRM continua sendo a fonte de verdade. A Lara nao pode inventar
+  horario.
 
 ### LangGraph
 
-- Criado runtime externo `lara-langgraph` com FastAPI.
-- Endpoint principal: `POST /v1/lara/turn`.
-- Health: `GET /health`.
-- Memoria curta isolada por `session_id`.
-- Persistencia simples por arquivo via `LARA_STATE_FILE=/data/lara_sessions.json`.
-- Container dedicado na mesma rede Docker do n8n.
-- Corrigido `/rclear` para limpar sessao antes de qualquer outra rota.
-- Corrigida confirmacao final como `Sim e isso mesmo`, que antes virava novo
-  detalhe do atendimento.
-- Corrigida saudacao duplicada apos reset.
+- Foi criado o servico `lara-langgraph` para centralizar estado e decisao da
+  conversa.
+- Endpoint interno:
+
+```text
+POST http://lara-langgraph:8080/v1/lara/turn
+GET  http://lara-langgraph:8080/health
+```
+
+- O servico roda em container separado do n8n, mas na mesma rede Docker.
+- O `session_id` isola a memoria por conversa.
+- `/rclear`, `/clear`, `/limpar` e comandos equivalentes devem limpar a sessao
+  antes de qualquer interpretacao de texto.
+- Foi corrigido o caso em que `Sim e isso mesmo` entrava como novo detalhe em
+  vez de confirmar o resumo final.
+- Foi corrigido o caso de saudacao duplicada depois de reset.
 
 ### n8n
 
-- Workflow V9 integrado ao LangGraph por HTTP interno.
-- `Code: Parse Agent Output` normaliza o contrato retornado pelo LangGraph.
-- `check_availability` segue para busca de slots no CRM.
-- `create_appointment` segue para criacao real de appointment no CRM.
-- `qa_mode` foi documentado como barreira contra side effects reais.
-- Telemetria de envio passou a registrar:
-  - `blocks_attempted`;
-  - `blocks_sent`;
-  - `send_success`;
-  - `send_errors`;
-  - `uazapi_token_present`.
-- Foi documentado que dumps brutos de execucao podem conter API key e nao devem
-  ser commitados sem sanitizacao.
+- O workflow V9 atual e `LARA V9 Shadow SDR`, id `7kXu17NYpsN8Yc65`.
+- O workflow antigo de referencia e `ORION-WF-Bot-v7-LARA-SDR`, id
+  `7SucjAi8zU69sQuT`.
+- A chamada ao LangGraph deve retornar um contrato com `reply_blocks`,
+  `intent`, `conversation_stage` e `next_action`.
+- `next_action=check_availability` deve chamar o CRM para buscar horarios.
+- `next_action=create_appointment` deve criar o appointment no CRM.
+- `Code: Parse Agent Output` e o ponto critico para normalizar a resposta do
+  LangGraph antes de decidir o proximo ramo.
+- Dois workflows nao podem ficar ativos respondendo o mesmo numero de WhatsApp.
 
-### CRM E Agenda
+### CRM
 
-- A agenda do CRM e a fonte de verdade para horarios.
-- O fluxo correto e agenda primeiro, pipeline depois.
-- Appointment so pode ser criado apos:
-  - nome confirmado;
-  - horario escolhido a partir de slot real;
+- O CRM precisa receber no agendamento:
+  - nome do contato;
+  - WhatsApp;
+  - data;
+  - horario;
   - motivo da visita;
-  - detalhes/contexto para o atendente;
-  - contato/e-mail quando exigido;
-  - resumo confirmado pelo cliente.
-- O endereco da loja so deve ser enviado no final do agendamento ou quando o
-  cliente pedir localizacao.
+  - observacoes com os detalhes coletados.
+- O funil correto e agenda primeiro, pipeline depois.
+- Se o CRM nao retornar slots, a Lara deve informar indisponibilidade/controlar
+  handoff, nao inventar horarios.
 
-### Tratamento De Mensagens E Arquivos
+### Midias E Arquivos
 
-- O mapa completo documenta entrada por texto, audio, imagem, video e arquivo.
-- O fluxo possui rota para baixar midia, identificar MIME type e transformar
-  conteudo suportado em texto antes de chamar a Lara.
-- Tipos documentados:
-  - audio;
-  - imagem;
-  - video;
-  - CSV;
-  - PDF;
-  - XLSX/ODS;
-  - JSON;
-  - XML;
-  - HTML;
-  - RTF;
-  - ICS;
-  - texto.
-- Arquivo nao suportado deve gerar erro controlado, nao resposta inventada.
+- A documentacao do fluxo completo registra tratamento para texto, audio,
+  imagem, video e documentos.
+- O fluxo esperado e baixar a midia, identificar o tipo e transformar em texto
+  antes de chamar a Lara, quando o tipo for suportado.
+- Tipos documentados: CSV, PDF, XLSX/ODS, JSON, XML, HTML, RTF, ICS e texto.
+- Arquivo nao suportado deve gerar resposta controlada, sem invencao de
+  conteudo.
 
-### Infraestrutura E Deploy
+### Deploy E Risco Atual
 
-- O servico `lara-langgraph` roda separado do n8n, mas na mesma rede Docker.
 - A imagem `n8n-zcac-lara-langgraph:latest` e local do VPS.
-- Se o painel da Hostinger tentar puxar essa imagem de um registry publico, o
-  deploy falha.
-- O compose precisa manter `build:` apontando para o codigo local ou a imagem
-  precisa ser publicada em registry privado.
-- Depois do backup/restauracao do VPS em 2026-08-12, a producao foi verificada:
-  - workflow V9 continuava ativo;
-  - LangGraph respondia health;
-  - codigo critico de `graph.py` estava preservado;
-  - source Git remoto estava defasado em `12702b7` com alteracoes soltas;
-  - docs novos nao estavam presentes no source remoto.
+- Se a Hostinger tentar puxar essa imagem de registry publico, o deploy falha.
+- O `docker-compose.yml` precisa manter `build:` apontando para o codigo local
+  ou a imagem precisa ser publicada em registry privado.
+- Depois do backup/restauracao do VPS, foi verificado que:
+  - o workflow V9 seguia ativo;
+  - o LangGraph respondia `/health`;
+  - o codigo critico do runtime estava preservado;
+  - o source remoto ainda podia estar defasado em relacao ao GitHub;
+  - era necessario validar a jornada real novamente no WhatsApp.
 
-## Documentacao Operacional
+### Evidencia E Pendencia
 
-Leia estes arquivos antes de alterar o fluxo:
-
-```text
-README.md
-docs/LARA_FULL_FLOW_MAP.md
-docs/LARA_LANGGRAPH_RUNTIME.md
-docs/LARA_V9_PRODUCTION_HANDOFF.md
-docs/VERSION_HISTORY.md
-qa/lara_v9_goal_report_20260720.md
-docs/prompts/LARA_V9_EXECUTION_LOOP_PROMPT.md
-```
-
-O prompt de meta para agentes executores fica em:
-
-```text
-docs/prompts/LARA_V9_EXECUTION_LOOP_PROMPT.md
-```
-
-Ele nao e a documentacao principal do projeto. Ele existe apenas para orientar
-um agente executor a seguir o processo de QA e correcao sem andar em circulos.
+- Testes locais do LangGraph foram usados para cobrir reset, saudacao,
+  confirmacao final e fluxo de agendamento.
+- Isso nao substitui validacao real em producao.
+- Antes de declarar pronto, ainda precisa passar a jornada real:
+  - WhatsApp recebe mensagem;
+  - n8n chama LangGraph;
+  - n8n busca slots reais no CRM;
+  - cliente escolhe horario;
+  - Lara coleta motivo, detalhes e contato;
+  - cliente confirma resumo;
+  - n8n cria appointment no CRM;
+  - WhatsApp recebe confirmacao final com endereco correto;
+  - appointment aparece na agenda do CRM;
+  - execution id fica registrada no issue `ORION-CRM#14`.
