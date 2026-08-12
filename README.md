@@ -181,52 +181,26 @@ handoff
 Fluxo feliz de agendamento:
 
 ```mermaid
-sequenceDiagram
-  participant C as Cliente
-  participant W as WhatsApp/n8n
-  participant L as LangGraph
-  participant R as CRM
-
-  C->>W: Boa noite
-  W->>L: message=Boa noite
-  L-->>W: Apresentacao + pergunta nome
-  W-->>C: Blocos de resposta
-
-  C->>W: Guilherme
-  W->>L: message=Guilherme
-  L-->>W: Pergunta interesse / catalogo ou agenda
-  W-->>C: Blocos de resposta
-
-  C->>W: Quero agendar atendimento presencial
-  W->>L: message=Quero agendar...
-  L-->>W: next_action=check_availability
-  W->>R: Buscar slots reais
-  R-->>W: slots
-  W->>L: available_slots
-  L-->>W: Lista horarios
-  W-->>C: Horarios disponiveis
-
-  C->>W: Pode ser as dez
-  W->>L: message=Pode ser as dez
-  L-->>W: Pede motivo da visita
-  W-->>C: Pergunta motivo
-
-  C->>W: Quero ver aliancas de casamento
-  W->>L: motivo
-  L-->>W: Pede detalhes/preferencia
-  W-->>C: Perguntas consultivas
-
-  C->>W: Meu email e...
-  W->>L: dados contato
-  L-->>W: Resumo e pedido de confirmacao
-  W-->>C: Confirma para mim?
-
-  C->>W: Sim, e isso mesmo
-  W->>L: confirmacao final
-  L-->>W: next_action=create_appointment
-  W->>R: Criar appointment
-  R-->>W: accepted=true
-  W-->>C: Agendamento confirmado + endereco + Maps
+flowchart TD
+  A["Cliente: Boa noite"] --> B["n8n envia mensagem ao LangGraph"]
+  B --> C["Lara se apresenta e pergunta o nome"]
+  C --> D["Cliente informa nome"]
+  D --> E["Lara pergunta interesse: catalogo ou agenda"]
+  E --> F["Cliente pede atendimento presencial"]
+  F --> G["LangGraph retorna next_action: check_availability"]
+  G --> H["n8n busca slots reais no CRM"]
+  H --> I["n8n devolve available_slots ao LangGraph"]
+  I --> J["Lara apresenta horarios disponiveis"]
+  J --> K["Cliente escolhe horario"]
+  K --> L["Lara coleta motivo da visita"]
+  L --> M["Lara coleta detalhes e preferencia"]
+  M --> N["Lara coleta e-mail e confirma WhatsApp"]
+  N --> O["Lara resume dados do atendimento"]
+  O --> P["Cliente confirma o resumo"]
+  P --> Q["LangGraph retorna next_action: create_appointment"]
+  Q --> R["n8n cria appointment no CRM"]
+  R --> S["Lara confirma agendamento"]
+  S --> T["Lara envia endereco correto e Google Maps"]
 ```
 
 ## Contrato Da API LangGraph
