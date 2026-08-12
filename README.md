@@ -441,64 +441,6 @@ Smoke remoto validado depois do patch:
 Ola     -> intent=identification, conversation_stage=identificacao
 ```
 
-## Pendencias Antes De Declarar 100%
-
-Ainda falta teste real do usuario no WhatsApp depois da ultima correcao.
-
-Checklist minimo:
-
-- enviar `/rclear`;
-- confirmar resposta de reset;
-- iniciar com `Ola`;
-- informar nome;
-- pedir agendamento presencial;
-- receber horarios reais do CRM;
-- escolher horario;
-- informar motivo da visita;
-- informar detalhes;
-- informar e-mail;
-- confirmar WhatsApp;
-- confirmar resumo;
-- verificar appointment criado no CRM;
-- verificar endereco correto enviado apenas no final.
-
-QA de erro humano:
-
-```text
-Oii
-Boa noite
-qro agenda uma vizta
-atendimento na loja
-pode ser as dez
-sim e isso mesmo
-onde fica a loja?
-quero falar com atendente
-nao entendi
-```
-
-## Regra Para O Proximo Dev
-
-Nao mexa no prompt primeiro.
-
-Ordem correta de diagnostico:
-
-1. Capturar execution id do n8n.
-2. Abrir os nos:
-   - `Get Message`
-   - `ROOT: Detectar Admin`
-   - `ROOT: Parser de Comando`
-   - `Lara LangGraph Turn`
-   - `Code: Parse Agent Output`
-   - `Code: Enviar Blocos`
-   - CRM slots/create appointment, se aplicavel.
-3. Identificar onde quebrou.
-4. Corrigir uma causa por rodada.
-5. Adicionar teste local quando a falha for do LangGraph.
-6. Validar n8n se tocar no workflow.
-7. Registrar execution id e resultado no issue `ORION-CRM#14`.
-
-Sem execution id ou evidencia real, nao declarar a automacao pronta.
-
 ## Mapa Completo Para Handoff
 
 O mapa completo do fluxo esta em:
@@ -530,9 +472,8 @@ Esse arquivo documenta:
 
 ## Ultimas Atualizacoes
 
-Este bloco substitui o prompt que estava no final do README. O objetivo aqui e
-registrar exatamente o que foi feito na ultima rodada para outro dev entender o
-estado atual sem depender do historico do chat.
+Este bloco registra exatamente o que foi feito na ultima rodada para outro dev
+entender o estado atual sem depender do historico do chat.
 
 ### Conversa E Estado
 
@@ -653,20 +594,3 @@ GET  http://lara-langgraph:8080/health
   - o codigo critico do runtime estava preservado;
   - o source remoto ainda podia estar defasado em relacao ao GitHub;
   - era necessario validar a jornada real novamente no WhatsApp.
-
-### Evidencia E Pendencia
-
-- Testes locais do LangGraph foram usados para cobrir reset, saudacao,
-  confirmacao final e fluxo de agendamento.
-- Isso nao substitui validacao real em producao.
-- Antes de declarar pronto, ainda precisa passar a jornada real:
-  - WhatsApp recebe mensagem;
-  - n8n chama LangGraph;
-  - n8n busca slots reais no CRM;
-  - cliente escolhe horario;
-  - Lara coleta motivo, detalhes e contato;
-  - cliente confirma resumo;
-  - n8n cria appointment no CRM;
-  - WhatsApp recebe confirmacao final com endereco correto;
-  - appointment aparece na agenda do CRM;
-  - execution id fica registrada no issue `ORION-CRM#14`.
